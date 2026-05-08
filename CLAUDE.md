@@ -28,7 +28,7 @@
 - Add a // [REVIEWED] comment on any block that should not be changed by the agent
 
 ## Standards
-- Follow /docs/STANDARDS.md strictly — it covers API design, error handling,
+- Follow /docs/IA/STANDARDS.md strictly — it covers API design, error handling,
   DI, SOLID application, code quality, and vertical slice pitfalls
 - When in doubt about any of these, read the relevant section before writing code
 - Never create a route without: input validation, typed response, error delegation to middleware
