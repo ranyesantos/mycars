@@ -15,8 +15,10 @@ app.get('/api/health', (_req, res) => {
 
 app.use(errorHandler)
 
-app.listen(PORT, () => {
-  logger.info(`Server running on http://localhost:${PORT}`)
-})
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    logger.info(`Server running on http://localhost:${PORT}`)
+  })
+}
 
 export { app }
