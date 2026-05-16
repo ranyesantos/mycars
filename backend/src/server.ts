@@ -9,10 +9,12 @@ const PORT = 3001
 app.use(cors({ origin: 'http://localhost:5173' }))
 app.use(express.json())
 
+// Routes — register before errorHandler
 app.get('/api/health', (_req, res) => {
   res.json({ success: true, data: { status: 'ok' } })
 })
 
+// Error handler must be last
 app.use(errorHandler)
 
 if (process.env.NODE_ENV !== 'test') {
