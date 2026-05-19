@@ -10,7 +10,7 @@ import { VehicleSearchService } from './vehicleSearch.service.js'
 import { createVehicleSearchRoutes } from './vehicleSearch.routes.js'
 import { errorHandler } from '../../shared/middleware/errorHandler.js'
 import { FipeClient } from '../../shared/services/fipe/fipe.client.js'
-import type { FipeYear, FipeYearDetail } from '../shared/services/fipe/fipe.types.js'
+import type { FipeYear, FipeYearDetail } from '../../shared/services/fipe/fipe.types.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
