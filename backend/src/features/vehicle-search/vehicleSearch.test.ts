@@ -3,9 +3,13 @@ import Database from 'better-sqlite3'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import express from 'express'
+import request from 'supertest'
 import { VehicleSearchRepository } from './vehicleSearch.repository.js'
 import { VehicleSearchService } from './vehicleSearch.service.js'
-import { FipeClient } from '../shared/services/fipe/fipe.client.js'
+import { createVehicleSearchRoutes } from './vehicleSearch.routes.js'
+import { errorHandler } from '../../shared/middleware/errorHandler.js'
+import { FipeClient } from '../../shared/services/fipe/fipe.client.js'
 import type { FipeYear, FipeYearDetail } from '../shared/services/fipe/fipe.types.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -65,8 +69,8 @@ describe('VehicleSearchService', () => {
 
   describe('searchByFipeCode', () => {
     it('should return cached vehicle when already in DB', async () => {
-      repo.createVehicle('005490-9', 'cars')
-      repo.createYears(1, [{ code: '2012-1', name: '2012 Gasolina' }])
+      const vehicleId = repo.createVehicle('005490-9', 'cars')
+      repo.createYears(vehicleId, [{ code: '2012-1', name: '2012 Gasolina' }])
 
       const result = await service.searchByFipeCode('cars', '005490-9')
 
@@ -185,6 +189,126 @@ describe('VehicleSearchService', () => {
         code: 'YEAR_NOT_AVAILABLE',
         statusCode: 404,
       })
+    })
+  })
+})
+
+describe('Vehicle Search Routes', () => {
+  let db: Database.Database
+  let repo: VehicleSearchRepository
+  let fipeClient: FipeClient
+  let app: express.Express
+
+  beforeAll(() => {
+    db = new Database(':memory:')
+    db.pragma('foreign_keys = ON')
+    runMigrationsOn(db)
+  })
+
+  beforeEach(() => {
+    repo = new VehicleSearchRepository(db)
+    fipeClient = createMockFipeClient()
+    const service = new VehicleSearchService(fipeClient, repo)
+    app = express()
+    app.use(express.json())
+    app.use(createVehicleSearchRoutes(service))
+    app.use(errorHandler)
+    db.exec('DELETE FROM vehicle_years')
+    db.exec('DELETE FROM vehicles')
+  })
+
+  afterAll(() => {
+    db.close()
+  })
+
+  describe('GET /api/vehicle/:type/:fipeCode', () => {
+    it('should return 200 with years from API on first search', async () => {
+      fipeClient.fetchYears = vi.fn().mockResolvedValue([
+        { code: '2012-1', name: '2012 Gasolina' },
+      ])
+
+      const response = await request(app).get('/api/vehicle/cars/005490-9')
+
+      expect(response.status).toBe(200)
+      expect(response.body.success).toBe(true)
+      expect(response.body.data.source).toBe('api')
+      expect(response.body.data.years).toHaveLength(1)
+    })
+
+    it('should return 200 with cache on second search', async () => {
+      const vehicleId = repo.createVehicle('005490-9', 'cars')
+      repo.createYears(vehicleId, [{ code: '2012-1', name: '2012 Gasolina' }])
+
+      const response = await request(app).get('/api/vehicle/cars/005490-9')
+
+      expect(response.status).toBe(200)
+      expect(response.body.data.source).toBe('cache')
+      expect(fipeClient.fetchYears).not.toHaveBeenCalled()
+    })
+
+    it('should return 404 when FIPE code not found', async () => {
+      fipeClient.fetchYears = vi.fn().mockResolvedValue([])
+
+      const response = await request(app).get('/api/vehicle/cars/000000-0')
+
+      expect(response.status).toBe(404)
+      expect(response.body.success).toBe(false)
+      expect(response.body.error.code).toBe('FIPE_CODE_NOT_FOUND')
+    })
+  })
+
+  describe('GET /api/vehicle/:type/:fipeCode/years/:yearCode', () => {
+    it('should return 200 with year detail from API', async () => {
+      const vehicleId = repo.createVehicle('005490-9', 'cars')
+      repo.createYears(vehicleId, [{ code: '2023-5', name: '2023 Flex' }])
+      fipeClient.fetchYearDetail = vi.fn().mockResolvedValue({
+        vehicleType: 1,
+        price: 'R$ 55.119,00',
+        brand: 'VW - VolksWagen',
+        model: 'Gol 1.0 Flex 12V 5p',
+        modelYear: 2023,
+        fuel: 'Flex',
+        codeFipe: '005490-9',
+        referenceMonth: 'maio de 2026',
+        fuelAcronym: 'F',
+      })
+
+      const response = await request(app).get(
+        '/api/vehicle/cars/005490-9/years/2023-5',
+      )
+
+      expect(response.status).toBe(200)
+      expect(response.body.data.price).toBe('R$ 55.119,00')
+      expect(response.body.data.source).toBe('api')
+    })
+
+    it('should return 200 with cached detail on second call', async () => {
+      const vehicleId = repo.createVehicle('005490-9', 'cars')
+      repo.createYears(vehicleId, [{ code: '2023-5', name: '2023 Flex' }])
+      const years = repo.findYearsByVehicleId(vehicleId)
+      repo.updateYearDetail(years[0].id, {
+        price: 'R$ 55.119,00',
+        fuel: 'Flex',
+        referenceMonth: 'maio de 2026',
+        fuelAcronym: 'F',
+      })
+
+      const response = await request(app).get(
+        '/api/vehicle/cars/005490-9/years/2023-5',
+      )
+
+      expect(response.status).toBe(200)
+      expect(response.body.data.source).toBe('cache')
+      expect(fipeClient.fetchYearDetail).not.toHaveBeenCalled()
+    })
+
+    it('should return 404 when vehicle does not exist', async () => {
+      const response = await request(app).get(
+        '/api/vehicle/cars/005490-9/years/2023-5',
+      )
+
+      expect(response.status).toBe(404)
+      expect(response.body.error.code).toBe('VEHICLE_NOT_FOUND')
     })
   })
 })
