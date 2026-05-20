@@ -1,4 +1,4 @@
-import type { FipeYear, FipeYearDetail, IFipeClient } from './fipe.types.js'
+import type { FipeYear, FipeYearDetail, IFipeClient } from './fipe.types'
 
 /** HTTP client for the FIPE vehicle pricing API (fipe.parallelum.com.br). */
 export class FipeClient implements IFipeClient {

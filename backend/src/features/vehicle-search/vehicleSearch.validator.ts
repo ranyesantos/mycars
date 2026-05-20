@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { Request, Response, NextFunction } from 'express'
-import { AppError } from '../../shared/errors/AppError.js'
+import { AppError } from '../../shared/errors/AppError'
 
 const vehicleTypeSchema = z.enum(['cars', 'trucks', 'motorcycles'])
 

@@ -1,12 +1,12 @@
 import express from 'express'
 import cors from 'cors'
-import { errorHandler } from './shared/middleware/errorHandler.js'
-import { logger } from './shared/utils/logger.js'
-import { FipeClient } from './shared/services/fipe/index.js'
-import { VehicleSearchRepository } from './features/vehicle-search/vehicleSearch.repository.js'
-import { VehicleSearchService } from './features/vehicle-search/vehicleSearch.service.js'
-import { createVehicleSearchRoutes } from './features/vehicle-search/index.js'
-import { getDb } from './db/index.js'
+import { errorHandler } from './shared/middleware/errorHandler'
+import { logger } from './shared/utils/logger'
+import { FipeClient } from './shared/services/fipe/index'
+import { VehicleSearchRepository } from './features/vehicle-search/vehicleSearch.repository'
+import { VehicleSearchService } from './features/vehicle-search/vehicleSearch.service'
+import { createVehicleSearchRoutes } from './features/vehicle-search/index'
+import { getDb } from './db/index'
 
 const app = express()
 const PORT = 3001
