@@ -1,19 +1,13 @@
-import Database from 'better-sqlite3'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { PrismaClient } from '@prisma/client'
+import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
+import 'dotenv/config'
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const DB_PATH = path.join(__dirname, '..', '..', 'vehicles.db')
+let db: PrismaClient | null = null
 
-let db: Database.Database | null = null
-
-export function getDb(): Database.Database {
+export function getDb(): PrismaClient {
   if (db) return db
 
-  db = new Database(DB_PATH)
-  db.pragma('journal_mode = WAL')
-  db.pragma('foreign_keys = ON')
+  const adapter = new PrismaBetterSqlite3({ url: process.env.DATABASE_URL! })
+  db = new PrismaClient({ adapter })
   return db
 }
-
-export { DB_PATH }
