@@ -1,0 +1,79 @@
+datasource db {
+  provider = "sqlite"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Vehicle {
+  id           Int              @id @default(autoincrement())
+  fipeCode     String           @unique @map("fipe_code")
+  vehicleType  String           @map("vehicle_type")
+  brand        String?
+  model        String?
+  favorited    Int              @default(0)
+  fetchedAt    DateTime         @default(now()) @map("fetched_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+  years        VehicleYear[]
+  scrapes      ScrapingDetail[]
+
+  @@map("vehicles")
+}
+
+model VehicleYear {
+  id             Int       @id @default(autoincrement())
+  vehicleId      Int       @map("vehicle_id")
+  yearCode       String    @map("year_code")
+  yearLabel      String    @map("year_label")
+  price          String?
+  fuel           String?
+  referenceMonth String?   @map("reference_month")
+  fuelAcronym    String?   @map("fuel_acronym")
+  fetchedAt      DateTime? @map("fetched_at")
+  priceUpdatedAt DateTime? @map("price_updated_at")
+  vehicle        Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@map("vehicle_years")
+}
+
+model ScrapingDetail {
+  id                 Int      @id @default(autoincrement())
+  vehicleId          Int      @map("vehicle_id")
+  sourceUrl          String   @map("source_url")
+  engine             String?
+  powerHp            String?  @map("power_hp")
+  torque             String?
+  transmission       String?
+  fuelType           String?  @map("fuel_type")
+  consumptionCity    String?  @map("consumption_city")
+  consumptionHighway String?  @map("consumption_highway")
+  rawData            String?  @map("raw_data")
+  scrapedAt          DateTime @default(now()) @map("scraped_at")
+  vehicle            Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@map("scraping_details")
+}
+
+model Job {
+  id        Int      @id @default(autoincrement())
+  type      String
+  payload   String
+  status    String   @default("pending")
+  attempts  Int      @default(0)
+  error     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("jobs")
+}
+
+model CronRun {
+  id              Int      @id @default(autoincrement())
+  type            String
+  vehiclesUpdated Int?     @map("vehicles_updated")
+  status          String
+  ranAt           DateTime @default(now()) @map("ran_at")
+
+  @@map("cron_runs")
+}
