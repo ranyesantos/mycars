@@ -1,11 +1,11 @@
-import { AppError } from '../../shared/errors/AppError.js'
-import type { IFipeClient } from '../../shared/services/fipe/fipe.types.js'
+import { AppError } from '../../shared/errors/AppError'
+import type { IFipeClient } from '../../shared/services/fipe/fipe.types'
 import type {
   SearchResponse,
   VehicleType,
   YearDetailResponse,
-} from './vehicleSearch.types.js'
-import type { VehicleSearchRepository } from './vehicleSearch.repository.js'
+} from './vehicleSearch.types'
+import type { VehicleSearchRepository } from './vehicleSearch.repository'
 
 /**
  * Progressive-caching FIPE search service.

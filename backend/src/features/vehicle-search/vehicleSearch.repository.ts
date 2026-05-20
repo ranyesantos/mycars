@@ -1,5 +1,5 @@
 import type Database from 'better-sqlite3'
-import type { Vehicle, VehicleYear, VehicleWithYears } from './vehicleSearch.types.js'
+import type { Vehicle, VehicleYear, VehicleWithYears } from './vehicleSearch.types'
 
 export class VehicleSearchRepository {
   constructor(private readonly db: Database.Database) {}

@@ -5,11 +5,11 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import express from 'express'
 import request from 'supertest'
-import { VehicleSearchRepository } from './vehicleSearch.repository.js'
-import { VehicleSearchService } from './vehicleSearch.service.js'
-import { createVehicleSearchRoutes } from './vehicleSearch.routes.js'
-import { errorHandler } from '../../shared/middleware/errorHandler.js'
-import type { FipeYear, FipeYearDetail, IFipeClient } from '../../shared/services/fipe/fipe.types.js'
+import { VehicleSearchRepository } from './vehicleSearch.repository'
+import { VehicleSearchService } from './vehicleSearch.service'
+import { createVehicleSearchRoutes } from './vehicleSearch.routes'
+import { errorHandler } from '../../shared/middleware/errorHandler'
+import type { FipeYear, FipeYearDetail, IFipeClient } from '../../shared/services/fipe/fipe.types'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 

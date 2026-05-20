@@ -1,9 +1,9 @@
 import { Router } from 'express'
-import type { VehicleSearchService } from './vehicleSearch.service.js'
+import type { VehicleSearchService } from './vehicleSearch.service'
 import {
   validateVehicleSearchParams,
   validateYearDetailParams,
-} from './vehicleSearch.validator.js'
+} from './vehicleSearch.validator'
 
 export function createVehicleSearchRoutes(
   service: VehicleSearchService,
@@ -14,6 +14,7 @@ export function createVehicleSearchRoutes(
     '/api/vehicle/:type/:fipeCode',
     validateVehicleSearchParams,
     async (req, res, next) => {
+      //need to remove these ******* try catch i hate itfuccccckkkkkkkkk
       try {
         const { type, fipeCode } = req.params as Record<string, string>
         const result = await service.searchByFipeCode(type, fipeCode)
