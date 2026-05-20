@@ -2,14 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { FipeClient } from './fipe.client.js'
 import type { FipeYear, FipeYearDetail } from './fipe.types.js'
 
-function mockFetch(response: unknown, status = 200): ReturnType<typeof vi.fn> {
-  return vi.fn().mockResolvedValue({
-    ok: status >= 200 && status < 300,
-    status,
-    json: vi.fn().mockResolvedValue(response),
-  })
-}
-
 describe('FipeClient', () => {
   let client: FipeClient
   let fetchSpy: ReturnType<typeof vi.fn>

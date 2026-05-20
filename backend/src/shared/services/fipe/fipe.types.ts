@@ -14,3 +14,12 @@ export interface FipeYearDetail {
   referenceMonth: string
   fuelAcronym: string
 }
+
+export interface IFipeClient {
+  fetchYears(type: string, fipeCode: string): Promise<FipeYear[]>
+  fetchYearDetail(
+    type: string,
+    fipeCode: string,
+    yearCode: string,
+  ): Promise<FipeYearDetail | null>
+}

@@ -1,17 +1,26 @@
 import { AppError } from '../../shared/errors/AppError.js'
-import type { FipeClient } from '../../shared/services/fipe/fipe.client.js'
+import type { IFipeClient } from '../../shared/services/fipe/fipe.types.js'
 import type {
   SearchResponse,
+  VehicleType,
   YearDetailResponse,
 } from './vehicleSearch.types.js'
 import type { VehicleSearchRepository } from './vehicleSearch.repository.js'
 
+/**
+ * Progressive-caching FIPE search service.
+ *
+ * Years list is cached on first search; per-year detail (price, fuel,
+ * brand, model) is cached on first detail request so no FIPE API
+ * response is ever fetched twice.
+ */
 export class VehicleSearchService {
   constructor(
-    private readonly fipeClient: FipeClient,
+    private readonly fipeClient: IFipeClient,
     private readonly repository: VehicleSearchRepository,
   ) {}
 
+  /** Get the available years for a FIPE code, from cache or the FIPE API. */
   async searchByFipeCode(
     type: string,
     fipeCode: string,
@@ -29,7 +38,7 @@ export class VehicleSearchService {
       }
     }
 
-    const years = await this.fipeClient.fetchYears(type, fipeCode)
+    const years = await this.fetchYearsSafely(type, fipeCode)
 
     if (years.length === 0) {
       throw new AppError(
@@ -39,6 +48,8 @@ export class VehicleSearchService {
       )
     }
 
+    // TODO: wrap createVehicle + createYears in a single transaction
+    // once an ORM or Unit-of-Work pattern is introduced (see database.md).
     const vehicleId = cached
       ? cached.id
       : this.repository.createVehicle(fipeCode, type)
@@ -47,7 +58,7 @@ export class VehicleSearchService {
 
     return {
       fipeCode,
-      vehicleType: type,
+      vehicleType: type as VehicleType,
       brand: cached?.brand ?? null,
       model: cached?.model ?? null,
       years: years.map((y) => ({ code: y.code, name: y.name })),
@@ -55,6 +66,7 @@ export class VehicleSearchService {
     }
   }
 
+  /** Get detailed info for a single year, from cache or the FIPE API. */
   async getYearDetail(
     type: string,
     fipeCode: string,
@@ -93,7 +105,7 @@ export class VehicleSearchService {
       }
     }
 
-    const detail = await this.fipeClient.fetchYearDetail(type, fipeCode, yearCode)
+    const detail = await this.fetchYearDetailSafely(type, fipeCode, yearCode)
 
     if (!detail) {
       throw new AppError(
@@ -131,6 +143,31 @@ export class VehicleSearchService {
       referenceMonth: detail.referenceMonth,
       fuelAcronym: detail.fuelAcronym,
       source: 'api',
+    }
+  }
+
+  private async fetchYearsSafely(
+    type: string,
+    fipeCode: string,
+  ) {
+    try {
+      return await this.fipeClient.fetchYears(type, fipeCode)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'FIPE API error'
+      throw new AppError('FIPE_API_ERROR', message, 502)
+    }
+  }
+
+  private async fetchYearDetailSafely(
+    type: string,
+    fipeCode: string,
+    yearCode: string,
+  ) {
+    try {
+      return await this.fipeClient.fetchYearDetail(type, fipeCode, yearCode)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'FIPE API error'
+      throw new AppError('FIPE_API_ERROR', message, 502)
     }
   }
 }

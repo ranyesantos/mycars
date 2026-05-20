@@ -5,7 +5,7 @@ import { logger } from './shared/utils/logger.js'
 import { FipeClient } from './shared/services/fipe/index.js'
 import { VehicleSearchRepository } from './features/vehicle-search/vehicleSearch.repository.js'
 import { VehicleSearchService } from './features/vehicle-search/vehicleSearch.service.js'
-import { createVehicleSearchRoutes } from './features/vehicle-search/vehicleSearch.routes.js'
+import { createVehicleSearchRoutes } from './features/vehicle-search/index.js'
 import { getDb } from './db/index.js'
 
 const app = express()

@@ -1,7 +1,9 @@
+export type VehicleType = 'cars' | 'trucks' | 'motorcycles'
+
 export interface Vehicle {
   id: number
   fipe_code: string
-  vehicle_type: 'cars' | 'trucks' | 'motorcycles'
+  vehicle_type: VehicleType
   brand: string | null
   model: string | null
   favorited: number
@@ -29,7 +31,7 @@ export interface VehicleWithYears extends Vehicle {
 export interface YearDetailResponse {
   vehicleId: number
   fipeCode: string
-  vehicleType: string
+  vehicleType: VehicleType
   yearCode: string
   yearLabel: string
   brand: string | null
@@ -43,7 +45,7 @@ export interface YearDetailResponse {
 
 export interface SearchResponse {
   fipeCode: string
-  vehicleType: string
+  vehicleType: VehicleType
   brand: string | null
   model: string | null
   years: { code: string; name: string }[]

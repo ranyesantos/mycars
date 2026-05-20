@@ -9,8 +9,7 @@ import { VehicleSearchRepository } from './vehicleSearch.repository.js'
 import { VehicleSearchService } from './vehicleSearch.service.js'
 import { createVehicleSearchRoutes } from './vehicleSearch.routes.js'
 import { errorHandler } from '../../shared/middleware/errorHandler.js'
-import { FipeClient } from '../../shared/services/fipe/fipe.client.js'
-import type { FipeYear, FipeYearDetail } from '../../shared/services/fipe/fipe.types.js'
+import type { FipeYear, FipeYearDetail, IFipeClient } from '../../shared/services/fipe/fipe.types.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -35,18 +34,18 @@ function runMigrationsOn(db: Database.Database): void {
   }
 }
 
-function createMockFipeClient(overrides?: Partial<FipeClient>): FipeClient {
+function createMockFipeClient(overrides?: Partial<IFipeClient>): IFipeClient {
   return {
     fetchYears: vi.fn().mockResolvedValue([]),
     fetchYearDetail: vi.fn().mockResolvedValue(null),
     ...overrides,
-  } as unknown as FipeClient
+  } as IFipeClient
 }
 
 describe('VehicleSearchService', () => {
   let db: Database.Database
   let repo: VehicleSearchRepository
-  let fipeClient: FipeClient
+  let fipeClient: IFipeClient
   let service: VehicleSearchService
 
   beforeAll(() => {
@@ -196,7 +195,7 @@ describe('VehicleSearchService', () => {
 describe('Vehicle Search Routes', () => {
   let db: Database.Database
   let repo: VehicleSearchRepository
-  let fipeClient: FipeClient
+  let fipeClient: IFipeClient
   let app: express.Express
 
   beforeAll(() => {
@@ -255,6 +254,22 @@ describe('Vehicle Search Routes', () => {
       expect(response.body.success).toBe(false)
       expect(response.body.error.code).toBe('FIPE_CODE_NOT_FOUND')
     })
+
+    it('should return 400 when vehicle type is invalid', async () => {
+      const response = await request(app).get('/api/vehicle/boats/005490-9')
+
+      expect(response.status).toBe(400)
+      expect(response.body.success).toBe(false)
+      expect(response.body.error.code).toBe('VALIDATION_ERROR')
+    })
+
+    it('should return 400 when FIPE code format is invalid', async () => {
+      const response = await request(app).get('/api/vehicle/cars/abc')
+
+      expect(response.status).toBe(400)
+      expect(response.body.success).toBe(false)
+      expect(response.body.error.code).toBe('VALIDATION_ERROR')
+    })
   })
 
   describe('GET /api/vehicle/:type/:fipeCode/years/:yearCode', () => {
@@ -309,6 +324,16 @@ describe('Vehicle Search Routes', () => {
 
       expect(response.status).toBe(404)
       expect(response.body.error.code).toBe('VEHICLE_NOT_FOUND')
+    })
+
+    it('should return 400 when year code format is invalid', async () => {
+      const response = await request(app).get(
+        '/api/vehicle/cars/005490-9/years/invalid',
+      )
+
+      expect(response.status).toBe(400)
+      expect(response.body.success).toBe(false)
+      expect(response.body.error.code).toBe('VALIDATION_ERROR')
     })
   })
 })
