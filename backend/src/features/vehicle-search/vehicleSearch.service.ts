@@ -1,5 +1,9 @@
 import { AppError } from '../../shared/errors/AppError'
-import type { IFipeClient } from '../../shared/services/fipe/fipe.types'
+import type {
+  FipeYear,
+  FipeYearDetail,
+  IFipeClient,
+} from '../../shared/services/fipe/fipe.types'
 import type { SearchResponse, VehicleType, YearDetailResponse } from './vehicleSearch.types'
 import type { VehicleSearchRepository } from './vehicleSearch.repository'
 
@@ -38,9 +42,7 @@ export class VehicleSearchService {
 
     const vehicleId = cached
       ? cached.id
-      : await this.repository.createVehicle(fipeCode, type)
-
-    await this.repository.createYears(vehicleId, years)
+      : await this.repository.createVehicleWithYears(fipeCode, type, years)
 
     return {
       fipeCode,
@@ -127,7 +129,7 @@ export class VehicleSearchService {
     }
   }
 
-  private async fetchYearsSafely(type: string, fipeCode: string) {
+  private async fetchYearsSafely(type: string, fipeCode: string): Promise<FipeYear[]> {
     try {
       return await this.fipeClient.fetchYears(type, fipeCode)
     } catch (error) {
@@ -140,7 +142,7 @@ export class VehicleSearchService {
     type: string,
     fipeCode: string,
     yearCode: string,
-  ) {
+  ): Promise<FipeYearDetail | null> {
     try {
       return await this.fipeClient.fetchYearDetail(type, fipeCode, yearCode)
     } catch (error) {

@@ -30,6 +30,26 @@ export class VehicleSearchRepository {
     return result.id
   }
 
+  async createVehicleWithYears(
+    fipeCode: string,
+    vehicleType: string,
+    years: { code: string; name: string }[],
+  ): Promise<number> {
+    const vehicle = await this.db.vehicle.create({
+      data: {
+        fipeCode,
+        vehicleType,
+        years: {
+          create: years.map((row) => ({
+            yearCode: row.code,
+            yearLabel: row.name,
+          })),
+        },
+      },
+    })
+    return vehicle.id
+  }
+
   async createYears(
     vehicleId: number,
     years: { code: string; name: string }[],
