@@ -1,8 +1,10 @@
-import type { FipeYear, FipeYearDetail } from './fipe.types.js'
+import type { FipeYear, FipeYearDetail, IFipeClient } from './fipe.types.js'
 
-export class FipeClient {
+/** HTTP client for the FIPE vehicle pricing API (fipe.parallelum.com.br). */
+export class FipeClient implements IFipeClient {
   constructor(private readonly baseUrl: string) {}
 
+  /** Fetch available model years for a FIPE code. Returns empty array on 404. */
   async fetchYears(type: string, fipeCode: string): Promise<FipeYear[]> {
     const url = `${this.baseUrl}/${type}/${fipeCode}/years`
     const response = await this.request(url)
@@ -14,6 +16,7 @@ export class FipeClient {
     return (await response.json()) as FipeYear[]
   }
 
+  /** Fetch pricing and fuel details for a specific model year. Returns null on 404. */
   async fetchYearDetail(
     type: string,
     fipeCode: string,
