@@ -1,38 +1,13 @@
 import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from 'vitest'
-import Database from 'better-sqlite3'
-import fs from 'node:fs'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import type { PrismaClient } from '@prisma/client'
 import express from 'express'
 import request from 'supertest'
 import { VehicleSearchRepository } from './vehicleSearch.repository'
 import { VehicleSearchService } from './vehicleSearch.service'
 import { createVehicleSearchRoutes } from './vehicleSearch.routes'
 import { errorHandler } from '../../shared/middleware/errorHandler'
+import { createTestDb, clearTestDb, closeTestDb } from '../../db/test-helpers'
 import type { FipeYear, FipeYearDetail, IFipeClient } from '../../shared/services/fipe/fipe.types'
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
-function runMigrationsOn(db: Database.Database): void {
-  const migrationsDir = path.join(__dirname, '..', '..', 'db', 'migrations')
-  const files = fs
-    .readdirSync(migrationsDir)
-    .filter((f) => f.endsWith('.sql'))
-    .sort()
-
-  db.exec(
-    `CREATE TABLE IF NOT EXISTS migrations (
-      name    TEXT PRIMARY KEY,
-      ran_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-    )`,
-  )
-
-  for (const file of files) {
-    const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf-8')
-    db.exec(sql)
-    db.prepare('INSERT OR IGNORE INTO migrations (name) VALUES (?)').run(file)
-  }
-}
 
 function createMockFipeClient(overrides?: Partial<IFipeClient>): IFipeClient {
   return {
@@ -43,33 +18,30 @@ function createMockFipeClient(overrides?: Partial<IFipeClient>): IFipeClient {
 }
 
 describe('VehicleSearchService', () => {
-  let db: Database.Database
+  let db: PrismaClient
   let repo: VehicleSearchRepository
   let fipeClient: IFipeClient
   let service: VehicleSearchService
 
   beforeAll(() => {
-    db = new Database(':memory:')
-    db.pragma('foreign_keys = ON')
-    runMigrationsOn(db)
+    db = createTestDb()
   })
 
-  beforeEach(() => {
+  beforeEach(async () => {
     repo = new VehicleSearchRepository(db)
     fipeClient = createMockFipeClient()
     service = new VehicleSearchService(fipeClient, repo)
-    db.exec('DELETE FROM vehicle_years')
-    db.exec('DELETE FROM vehicles')
+    await clearTestDb(db)
   })
 
-  afterAll(() => {
-    db.close()
+  afterAll(async () => {
+    await closeTestDb(db)
   })
 
   describe('searchByFipeCode', () => {
     it('should return cached vehicle when already in DB', async () => {
-      const vehicleId = repo.createVehicle('005490-9', 'cars')
-      repo.createYears(vehicleId, [{ code: '2012-1', name: '2012 Gasolina' }])
+      const vehicleId = await repo.createVehicle('005490-9', 'cars')
+      await repo.createYears(vehicleId, [{ code: '2012-1', name: '2012 Gasolina' }])
 
       const result = await service.searchByFipeCode('cars', '005490-9')
 
@@ -92,8 +64,7 @@ describe('VehicleSearchService', () => {
       expect(result.years).toHaveLength(2)
       expect(fipeClient.fetchYears).toHaveBeenCalledWith('cars', '005490-9')
 
-      // Should be cached now
-      const vehicle = repo.findByFipeCode('005490-9')
+      const vehicle = await repo.findByFipeCode('005490-9')
       expect(vehicle).not.toBeNull()
     })
 
@@ -111,10 +82,10 @@ describe('VehicleSearchService', () => {
 
   describe('getYearDetail', () => {
     it('should return cached year detail when fetched_at is set', async () => {
-      const vehicleId = repo.createVehicle('005490-9', 'cars')
-      repo.createYears(vehicleId, [{ code: '2023-5', name: '2023 Flex' }])
-      const years = repo.findYearsByVehicleId(vehicleId)
-      repo.updateYearDetail(years[0].id, {
+      const vehicleId = await repo.createVehicle('005490-9', 'cars')
+      await repo.createYears(vehicleId, [{ code: '2023-5', name: '2023 Flex' }])
+      const years = await repo.findYearsByVehicleId(vehicleId)
+      await repo.updateYearDetail(years[0].id, {
         price: 'R$ 55.119,00',
         fuel: 'Flex',
         referenceMonth: 'maio de 2026',
@@ -129,8 +100,8 @@ describe('VehicleSearchService', () => {
     })
 
     it('should fetch from API when year not cached', async () => {
-      const vehicleId = repo.createVehicle('005490-9', 'cars')
-      repo.createYears(vehicleId, [{ code: '2023-5', name: '2023 Flex' }])
+      const vehicleId = await repo.createVehicle('005490-9', 'cars')
+      await repo.createYears(vehicleId, [{ code: '2023-5', name: '2023 Flex' }])
 
       const mockDetail: FipeYearDetail = {
         vehicleType: 1,
@@ -151,8 +122,7 @@ describe('VehicleSearchService', () => {
       expect(result.price).toBe('R$ 55.119,00')
       expect(result.brand).toBe('VW - VolksWagen')
 
-      // Should have updated vehicle brand/model
-      const vehicle = repo.findByFipeCode('005490-9')
+      const vehicle = await repo.findByFipeCode('005490-9')
       expect(vehicle!.brand).toBe('VW - VolksWagen')
       expect(vehicle!.model).toBe('Gol 1.0 Flex 12V 5p')
     })
@@ -167,7 +137,7 @@ describe('VehicleSearchService', () => {
     })
 
     it('should throw 404 when year code not in DB', async () => {
-      repo.createVehicle('005490-9', 'cars')
+      await repo.createVehicle('005490-9', 'cars')
 
       await expect(
         service.getYearDetail('cars', '005490-9', '9999-9'),
@@ -178,8 +148,8 @@ describe('VehicleSearchService', () => {
     })
 
     it('should throw 404 when FIPE API returns null for year', async () => {
-      const vehicleId = repo.createVehicle('005490-9', 'cars')
-      repo.createYears(vehicleId, [{ code: '9999-9', name: '9999 Unknown' }])
+      const vehicleId = await repo.createVehicle('005490-9', 'cars')
+      await repo.createYears(vehicleId, [{ code: '9999-9', name: '9999 Unknown' }])
       fipeClient.fetchYearDetail = vi.fn().mockResolvedValue(null)
 
       await expect(
@@ -193,18 +163,16 @@ describe('VehicleSearchService', () => {
 })
 
 describe('Vehicle Search Routes', () => {
-  let db: Database.Database
+  let db: PrismaClient
   let repo: VehicleSearchRepository
   let fipeClient: IFipeClient
   let app: express.Express
 
   beforeAll(() => {
-    db = new Database(':memory:')
-    db.pragma('foreign_keys = ON')
-    runMigrationsOn(db)
+    db = createTestDb()
   })
 
-  beforeEach(() => {
+  beforeEach(async () => {
     repo = new VehicleSearchRepository(db)
     fipeClient = createMockFipeClient()
     const service = new VehicleSearchService(fipeClient, repo)
@@ -212,12 +180,11 @@ describe('Vehicle Search Routes', () => {
     app.use(express.json())
     app.use(createVehicleSearchRoutes(service))
     app.use(errorHandler)
-    db.exec('DELETE FROM vehicle_years')
-    db.exec('DELETE FROM vehicles')
+    await clearTestDb(db)
   })
 
-  afterAll(() => {
-    db.close()
+  afterAll(async () => {
+    await closeTestDb(db)
   })
 
   describe('GET /api/vehicle/:type/:fipeCode', () => {
@@ -235,8 +202,8 @@ describe('Vehicle Search Routes', () => {
     })
 
     it('should return 200 with cache on second search', async () => {
-      const vehicleId = repo.createVehicle('005490-9', 'cars')
-      repo.createYears(vehicleId, [{ code: '2012-1', name: '2012 Gasolina' }])
+      const vehicleId = await repo.createVehicle('005490-9', 'cars')
+      await repo.createYears(vehicleId, [{ code: '2012-1', name: '2012 Gasolina' }])
 
       const response = await request(app).get('/api/vehicle/cars/005490-9')
 
@@ -274,8 +241,8 @@ describe('Vehicle Search Routes', () => {
 
   describe('GET /api/vehicle/:type/:fipeCode/years/:yearCode', () => {
     it('should return 200 with year detail from API', async () => {
-      const vehicleId = repo.createVehicle('005490-9', 'cars')
-      repo.createYears(vehicleId, [{ code: '2023-5', name: '2023 Flex' }])
+      const vehicleId = await repo.createVehicle('005490-9', 'cars')
+      await repo.createYears(vehicleId, [{ code: '2023-5', name: '2023 Flex' }])
       fipeClient.fetchYearDetail = vi.fn().mockResolvedValue({
         vehicleType: 1,
         price: 'R$ 55.119,00',
@@ -298,10 +265,10 @@ describe('Vehicle Search Routes', () => {
     })
 
     it('should return 200 with cached detail on second call', async () => {
-      const vehicleId = repo.createVehicle('005490-9', 'cars')
-      repo.createYears(vehicleId, [{ code: '2023-5', name: '2023 Flex' }])
-      const years = repo.findYearsByVehicleId(vehicleId)
-      repo.updateYearDetail(years[0].id, {
+      const vehicleId = await repo.createVehicle('005490-9', 'cars')
+      await repo.createYears(vehicleId, [{ code: '2023-5', name: '2023 Flex' }])
+      const years = await repo.findYearsByVehicleId(vehicleId)
+      await repo.updateYearDetail(years[0].id, {
         price: 'R$ 55.119,00',
         fuel: 'Flex',
         referenceMonth: 'maio de 2026',
