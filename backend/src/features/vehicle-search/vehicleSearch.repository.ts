@@ -1,73 +1,87 @@
-import type Database from 'better-sqlite3'
-import type { Vehicle, VehicleYear, VehicleWithYears } from './vehicleSearch.types'
+import type { Prisma, PrismaClient, Vehicle, VehicleYear } from '@prisma/client'
+
+export type VehicleWithYearsPayload = Prisma.VehicleGetPayload<{
+  include: {
+    years: {
+      select: {
+        yearCode: true
+        yearLabel: true
+        price: true
+        fetchedAt: true
+      }
+    }
+  }
+}>
 
 export class VehicleSearchRepository {
-  constructor(private readonly db: Database.Database) {}
+  constructor(private readonly db: PrismaClient) {}
 
-  findByFipeCode(fipeCode: string): Vehicle | null {
-    return (
-      (this.db
-        .prepare('SELECT * FROM vehicles WHERE fipe_code = ?')
-        .get(fipeCode) as Vehicle) ?? null
-    )
+  async findByFipeCode(fipeCode: string): Promise<Vehicle | null> {
+    return this.db.vehicle.findUnique({ where: { fipeCode } })
   }
 
-  createVehicle(fipeCode: string, vehicleType: string): number {
-    const result = this.db
-      .prepare('INSERT INTO vehicles (fipe_code, vehicle_type) VALUES (?, ?)')
-      .run(fipeCode, vehicleType)
-    return Number(result.lastInsertRowid)
+  async createVehicle(
+    fipeCode: string,
+    vehicleType: string,
+  ): Promise<number> {
+    const result = await this.db.vehicle.create({
+      data: { fipeCode, vehicleType },
+    })
+    return result.id
   }
 
-  createYears(
+  async createYears(
     vehicleId: number,
     years: { code: string; name: string }[],
-  ): void {
-    const stmt = this.db.prepare(
-      'INSERT INTO vehicle_years (vehicle_id, year_code, year_label) VALUES (?, ?, ?)',
+  ): Promise<void> {
+    await this.db.$transaction(
+      years.map((row) =>
+        this.db.vehicleYear.create({
+          data: {
+            vehicleId,
+            yearCode: row.code,
+            yearLabel: row.name,
+          },
+        }),
+      ),
     )
+  }
 
-    const insert = this.db.transaction(
-      (rows: { code: string; name: string }[]) => {
-        for (const row of rows) {
-          stmt.run(vehicleId, row.code, row.name)
-        }
+  async findYearsByVehicleId(
+    vehicleId: number,
+  ): Promise<VehicleYear[]> {
+    return this.db.vehicleYear.findMany({ where: { vehicleId } })
+  }
+
+  async findVehicleWithYears(
+    fipeCode: string,
+  ): Promise<VehicleWithYearsPayload | null> {
+    return this.db.vehicle.findUnique({
+      where: { fipeCode },
+      include: {
+        years: {
+          select: {
+            yearCode: true,
+            yearLabel: true,
+            price: true,
+            fetchedAt: true,
+          },
+          orderBy: { yearCode: 'asc' },
+        },
       },
-    )
-
-    insert(years)
+    })
   }
 
-  findYearsByVehicleId(vehicleId: number): VehicleYear[] {
-    return this.db
-      .prepare('SELECT * FROM vehicle_years WHERE vehicle_id = ?')
-      .all(vehicleId) as VehicleYear[]
+  async findYearByCode(
+    vehicleId: number,
+    yearCode: string,
+  ): Promise<VehicleYear | null> {
+    return this.db.vehicleYear.findFirst({
+      where: { vehicleId, yearCode },
+    })
   }
 
-  findVehicleWithYears(fipeCode: string): VehicleWithYears | null {
-    const vehicle = this.findByFipeCode(fipeCode)
-    if (!vehicle) return null
-
-    const years = this.db
-      .prepare(
-        `SELECT year_code, year_label, price, fetched_at
-         FROM vehicle_years WHERE vehicle_id = ?
-         ORDER BY year_code`,
-      )
-      .all(vehicle.id) as VehicleWithYears['years']
-
-    return { ...vehicle, years }
-  }
-
-  findYearByCode(vehicleId: number, yearCode: string): VehicleYear | null {
-    return (
-      (this.db
-        .prepare('SELECT * FROM vehicle_years WHERE vehicle_id = ? AND year_code = ?')
-        .get(vehicleId, yearCode) as VehicleYear) ?? null
-    )
-  }
-
-  updateYearDetail(
+  async updateYearDetail(
     yearId: number,
     data: {
       price: string
@@ -75,23 +89,27 @@ export class VehicleSearchRepository {
       referenceMonth: string
       fuelAcronym: string
     },
-  ): void {
-    this.db
-      .prepare(
-        `UPDATE vehicle_years
-         SET price = ?, fuel = ?, reference_month = ?, fuel_acronym = ?, fetched_at = datetime('now')
-         WHERE id = ?`,
-      )
-      .run(data.price, data.fuel, data.referenceMonth, data.fuelAcronym, yearId)
+  ): Promise<void> {
+    await this.db.vehicleYear.update({
+      where: { id: yearId },
+      data: {
+        price: data.price,
+        fuel: data.fuel,
+        referenceMonth: data.referenceMonth,
+        fuelAcronym: data.fuelAcronym,
+        fetchedAt: new Date(),
+      },
+    })
   }
 
-  updateVehicleBrandModel(
+  async updateVehicleBrandModel(
     vehicleId: number,
     brand: string,
     model: string,
-  ): void {
-    this.db
-      .prepare('UPDATE vehicles SET brand = ?, model = ? WHERE id = ?')
-      .run(brand, model, vehicleId)
+  ): Promise<void> {
+    await this.db.vehicle.update({
+      where: { id: vehicleId },
+      data: { brand, model },
+    })
   }
 }
