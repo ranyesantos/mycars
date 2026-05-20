@@ -1,39 +1,27 @@
 import { AppError } from '../../shared/errors/AppError'
 import type { IFipeClient } from '../../shared/services/fipe/fipe.types'
-import type {
-  SearchResponse,
-  VehicleType,
-  YearDetailResponse,
-} from './vehicleSearch.types'
+import type { SearchResponse, VehicleType, YearDetailResponse } from './vehicleSearch.types'
 import type { VehicleSearchRepository } from './vehicleSearch.repository'
 
-/**
- * Progressive-caching FIPE search service.
- *
- * Years list is cached on first search; per-year detail (price, fuel,
- * brand, model) is cached on first detail request so no FIPE API
- * response is ever fetched twice.
- */
 export class VehicleSearchService {
   constructor(
     private readonly fipeClient: IFipeClient,
     private readonly repository: VehicleSearchRepository,
   ) {}
 
-  /** Get the available years for a FIPE code, from cache or the FIPE API. */
   async searchByFipeCode(
     type: string,
     fipeCode: string,
   ): Promise<SearchResponse> {
-    const cached = this.repository.findVehicleWithYears(fipeCode)
+    const cached = await this.repository.findVehicleWithYears(fipeCode)
 
     if (cached && cached.years.length > 0) {
       return {
         fipeCode,
-        vehicleType: cached.vehicle_type,
+        vehicleType: cached.vehicleType as VehicleType,
         brand: cached.brand,
         model: cached.model,
-        years: cached.years.map((y) => ({ code: y.year_code, name: y.year_label })),
+        years: cached.years.map((y) => ({ code: y.yearCode, name: y.yearLabel })),
         source: 'cache',
       }
     }
@@ -48,13 +36,11 @@ export class VehicleSearchService {
       )
     }
 
-    // TODO: wrap createVehicle + createYears in a single transaction
-    // once an ORM or Unit-of-Work pattern is introduced (see database.md).
     const vehicleId = cached
       ? cached.id
-      : this.repository.createVehicle(fipeCode, type)
+      : await this.repository.createVehicle(fipeCode, type)
 
-    this.repository.createYears(vehicleId, years)
+    await this.repository.createYears(vehicleId, years)
 
     return {
       fipeCode,
@@ -66,41 +52,36 @@ export class VehicleSearchService {
     }
   }
 
-  /** Get detailed info for a single year, from cache or the FIPE API. */
   async getYearDetail(
     type: string,
     fipeCode: string,
     yearCode: string,
   ): Promise<YearDetailResponse> {
-    const vehicle = this.repository.findByFipeCode(fipeCode)
+    const vehicle = await this.repository.findByFipeCode(fipeCode)
 
     if (!vehicle) {
       throw new AppError('VEHICLE_NOT_FOUND', 'Vehicle not found', 404)
     }
 
-    const yearRow = this.repository.findYearByCode(vehicle.id, yearCode)
+    const yearRow = await this.repository.findYearByCode(vehicle.id, yearCode)
 
     if (!yearRow) {
-      throw new AppError(
-        'YEAR_NOT_FOUND',
-        'Year not found for this vehicle',
-        404,
-      )
+      throw new AppError('YEAR_NOT_FOUND', 'Year not found for this vehicle', 404)
     }
 
-    if (yearRow.fetched_at) {
+    if (yearRow.fetchedAt) {
       return {
         vehicleId: vehicle.id,
         fipeCode,
-        vehicleType: vehicle.vehicle_type,
-        yearCode: yearRow.year_code,
-        yearLabel: yearRow.year_label,
+        vehicleType: vehicle.vehicleType as VehicleType,
+        yearCode: yearRow.yearCode,
+        yearLabel: yearRow.yearLabel,
         brand: vehicle.brand,
         model: vehicle.model,
         price: yearRow.price!,
         fuel: yearRow.fuel!,
-        referenceMonth: yearRow.reference_month!,
-        fuelAcronym: yearRow.fuel_acronym!,
+        referenceMonth: yearRow.referenceMonth!,
+        fuelAcronym: yearRow.fuelAcronym!,
         source: 'cache',
       }
     }
@@ -115,7 +96,7 @@ export class VehicleSearchService {
       )
     }
 
-    this.repository.updateYearDetail(yearRow.id, {
+    await this.repository.updateYearDetail(yearRow.id, {
       price: detail.price,
       fuel: detail.fuel,
       referenceMonth: detail.referenceMonth,
@@ -123,7 +104,7 @@ export class VehicleSearchService {
     })
 
     if (!vehicle.brand) {
-      this.repository.updateVehicleBrandModel(
+      await this.repository.updateVehicleBrandModel(
         vehicle.id,
         detail.brand,
         detail.model,
@@ -133,9 +114,9 @@ export class VehicleSearchService {
     return {
       vehicleId: vehicle.id,
       fipeCode,
-      vehicleType: vehicle.vehicle_type,
-      yearCode: yearRow.year_code,
-      yearLabel: yearRow.year_label,
+      vehicleType: vehicle.vehicleType as VehicleType,
+      yearCode: yearRow.yearCode,
+      yearLabel: yearRow.yearLabel,
       brand: detail.brand,
       model: detail.model,
       price: detail.price,
@@ -146,10 +127,7 @@ export class VehicleSearchService {
     }
   }
 
-  private async fetchYearsSafely(
-    type: string,
-    fipeCode: string,
-  ) {
+  private async fetchYearsSafely(type: string, fipeCode: string) {
     try {
       return await this.fipeClient.fetchYears(type, fipeCode)
     } catch (error) {
