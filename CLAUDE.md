@@ -108,3 +108,11 @@ Examples:
 - The development phases can be seen into docs/phases
 - Initial database schema can been seen into docs/initial-database-schema
 - ADRs can be seen into docs/ADRs.md
+****
+## Before marking any task as complete, verify:
+- [ ] All async functions have explicit return types
+- [ ] No `any` used anywhere in the written code
+- [ ] No business logic inside route handlers
+- [ ] Loading, error and success states handled in every async component
+- [ ] Props are explicitly typed with an interface
+- [ ] Relevant standards file was re-read, not recalled from memory
