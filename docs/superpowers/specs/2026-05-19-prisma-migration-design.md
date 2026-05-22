@@ -1,7 +1,7 @@
 # Prisma ORM Migration — Design Spec
 
 **Date:** 2026-05-19
-**Status:** approved
+
 **Supersedes:** ADR-001 (SQLite over PostgreSQL — decision retained; better-sqlite3 driver replaced by Prisma)
 
 ## Motivation
