@@ -1,0 +1,51 @@
+import type { FipeYear, FipeYearDetail, IFipeClient } from './fipe.types'
+
+/** HTTP client for the FIPE vehicle pricing API (fipe.parallelum.com.br). */
+export class FipeClient implements IFipeClient {
+  constructor(private readonly baseUrl: string) {}
+
+  /** Fetch available model years for a FIPE code. Returns empty array on 404. */
+  async fetchYears(type: string, fipeCode: string): Promise<FipeYear[]> {
+    const url = `${this.baseUrl}/${type}/${fipeCode}/years`
+    const response = await this.request(url)
+
+    if (response.status === 404) {
+      return []
+    }
+
+    return (await response.json()) as FipeYear[]
+  }
+
+  /** Fetch pricing and fuel details for a specific model year. Returns null on 404. */
+  async fetchYearDetail(
+    type: string,
+    fipeCode: string,
+    yearCode: string,
+  ): Promise<FipeYearDetail | null> {
+    const url = `${this.baseUrl}/${type}/${fipeCode}/years/${yearCode}`
+    const response = await this.request(url)
+
+    if (response.status === 404) {
+      return null
+    }
+
+    return (await response.json()) as FipeYearDetail
+  }
+
+  private async request(url: string): Promise<Response> {
+    let response: Response
+
+    try {
+      response = await fetch(url)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error'
+      throw new Error(`FIPE API request failed: ${message}`)
+    }
+
+    if (!response.ok && response.status !== 404) {
+      throw new Error(`FIPE API error: ${response.status} ${response.statusText}`)
+    }
+
+    return response
+  }
+}

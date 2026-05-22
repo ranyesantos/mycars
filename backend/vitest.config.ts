@@ -4,5 +4,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    env: {
+      DATABASE_URL: 'file:../test.db',
+    },
   },
 })
