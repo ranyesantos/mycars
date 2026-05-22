@@ -7,7 +7,11 @@ let db: PrismaClient | null = null
 export function getDb(): PrismaClient {
   if (db) return db
 
-  const adapter = new PrismaBetterSqlite3({ url: process.env.DATABASE_URL! })
+  const url = process.env.DATABASE_URL
+  if (!url) {
+    throw new Error('DATABASE_URL environment variable is required')
+  }
+  const adapter = new PrismaBetterSqlite3({ url })
   db = new PrismaClient({ adapter })
   return db
 }

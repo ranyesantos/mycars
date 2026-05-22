@@ -13,6 +13,7 @@ export class VehicleSearchService {
     private readonly repository: VehicleSearchRepository,
   ) {}
 
+  /** Search by FIPE code, returning years from cache or the FIPE API. */
   async searchByFipeCode(
     type: string,
     fipeCode: string,
@@ -44,6 +45,11 @@ export class VehicleSearchService {
       ? cached.id
       : await this.repository.createVehicleWithYears(fipeCode, type, years)
 
+    // Persist years if vehicle was already in DB without them
+    if (cached && cached.years.length === 0) {
+      await this.repository.createYears(vehicleId, years)
+    }
+
     return {
       fipeCode,
       vehicleType: type as VehicleType,
@@ -54,6 +60,7 @@ export class VehicleSearchService {
     }
   }
 
+  /** Get detailed info for a single year, from cache or the FIPE API. */
   async getYearDetail(
     type: string,
     fipeCode: string,
@@ -80,10 +87,10 @@ export class VehicleSearchService {
         yearLabel: yearRow.yearLabel,
         brand: vehicle.brand,
         model: vehicle.model,
-        price: yearRow.price!,
-        fuel: yearRow.fuel!,
-        referenceMonth: yearRow.referenceMonth!,
-        fuelAcronym: yearRow.fuelAcronym!,
+        price: yearRow.price ?? '',
+        fuel: yearRow.fuel ?? '',
+        referenceMonth: yearRow.referenceMonth ?? '',
+        fuelAcronym: yearRow.fuelAcronym ?? '',
         source: 'cache',
       }
     }
@@ -129,6 +136,7 @@ export class VehicleSearchService {
     }
   }
 
+  /** Fetch available years from the FIPE API, wrapping errors with AppError. */
   private async fetchYearsSafely(type: string, fipeCode: string): Promise<FipeYear[]> {
     try {
       return await this.fipeClient.fetchYears(type, fipeCode)
@@ -138,6 +146,7 @@ export class VehicleSearchService {
     }
   }
 
+  /** Fetch pricing and fuel details for a specific year, wrapping errors with AppError. */
   private async fetchYearDetailSafely(
     type: string,
     fipeCode: string,
