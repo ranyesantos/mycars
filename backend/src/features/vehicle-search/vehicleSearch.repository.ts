@@ -16,20 +16,20 @@ export type VehicleWithYearsPayload = Prisma.VehicleGetPayload<{
 export class VehicleSearchRepository {
   constructor(private readonly db: PrismaClient) {}
 
+  /** Find a vehicle by FIPE code, or null if not found. */
   async findByFipeCode(fipeCode: string): Promise<Vehicle | null> {
     return this.db.vehicle.findUnique({ where: { fipeCode } })
   }
 
-  async createVehicle(
-    fipeCode: string,
-    vehicleType: string,
-  ): Promise<number> {
+  /** Insert a vehicle row and return its ID. Prefer createVehicleWithYears for new vehicles. */
+  async createVehicle(fipeCode: string, vehicleType: string): Promise<number> {
     const result = await this.db.vehicle.create({
       data: { fipeCode, vehicleType },
     })
     return result.id
   }
 
+  /** Insert a vehicle and its years atomically via nested create. */
   async createVehicleWithYears(
     fipeCode: string,
     vehicleType: string,
@@ -50,6 +50,7 @@ export class VehicleSearchRepository {
     return vehicle.id
   }
 
+  /** Insert years for an existing vehicle in a single transaction. */
   async createYears(
     vehicleId: number,
     years: { code: string; name: string }[],
@@ -67,15 +68,13 @@ export class VehicleSearchRepository {
     )
   }
 
-  async findYearsByVehicleId(
-    vehicleId: number,
-  ): Promise<VehicleYear[]> {
+  /** Find all years belonging to a vehicle. */
+  async findYearsByVehicleId(vehicleId: number): Promise<VehicleYear[]> {
     return this.db.vehicleYear.findMany({ where: { vehicleId } })
   }
 
-  async findVehicleWithYears(
-    fipeCode: string,
-  ): Promise<VehicleWithYearsPayload | null> {
+  /** Find a vehicle with its years eagerly loaded. */
+  async findVehicleWithYears(fipeCode: string): Promise<VehicleWithYearsPayload | null> {
     return this.db.vehicle.findUnique({
       where: { fipeCode },
       include: {
@@ -92,6 +91,7 @@ export class VehicleSearchRepository {
     })
   }
 
+  /** Find a specific year row for a vehicle, or null. */
   async findYearByCode(
     vehicleId: number,
     yearCode: string,
@@ -101,6 +101,7 @@ export class VehicleSearchRepository {
     })
   }
 
+  /** Update a year row with FIPE detail data and mark it as fetched. */
   async updateYearDetail(
     yearId: number,
     data: {
@@ -122,6 +123,7 @@ export class VehicleSearchRepository {
     })
   }
 
+  /** Update the brand and model on a vehicle row. */
   async updateVehicleBrandModel(
     vehicleId: number,
     brand: string,

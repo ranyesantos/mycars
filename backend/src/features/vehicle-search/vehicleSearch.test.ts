@@ -10,11 +10,12 @@ import { createTestDb, clearTestDb, closeTestDb } from '../../db/test-helpers'
 import type { FipeYear, FipeYearDetail, IFipeClient } from '../../shared/services/fipe/fipe.types'
 
 function createMockFipeClient(overrides?: Partial<IFipeClient>): IFipeClient {
-  return {
+  const mock: IFipeClient = {
     fetchYears: vi.fn().mockResolvedValue([]),
     fetchYearDetail: vi.fn().mockResolvedValue(null),
     ...overrides,
-  } as IFipeClient
+  }
+  return mock
 }
 
 describe('VehicleSearchService', () => {
