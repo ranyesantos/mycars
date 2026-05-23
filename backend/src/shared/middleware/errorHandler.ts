@@ -1,5 +1,8 @@
 import type { Request, Response, NextFunction } from 'express'
 import { AppError } from '../errors/AppError'
+import { FipeApiError } from '../errors/FipeApiError'
+import { NotFoundError } from '../errors/NotFoundError'
+import { ValidationError } from '../errors/ValidationError'
 import { logger } from '../utils/logger'
 
 export function errorHandler(
@@ -8,14 +11,35 @@ export function errorHandler(
   res: Response,
   _next: NextFunction,
 ): void {
+  if (err instanceof ValidationError) {
+    res.status(err.statusCode).json({
+      success: false,
+      error: { code: err.code, message: err.message, details: err.details ?? [] },
+    })
+    return
+  }
+
+  if (err instanceof NotFoundError) {
+    res.status(err.statusCode).json({
+      success: false,
+      error: { code: err.code, message: err.message, details: [] },
+    })
+    return
+  }
+
+  if (err instanceof FipeApiError) {
+    logger.error('FIPE API error', { message: err.message })
+    res.status(err.statusCode).json({
+      success: false,
+      error: { code: err.code, message: err.message, details: [] },
+    })
+    return
+  }
+
   if (err instanceof AppError) {
     res.status(err.statusCode).json({
       success: false,
-      error: {
-        code: err.code,
-        message: err.message,
-        details: err.details ?? [],
-      },
+      error: { code: err.code, message: err.message, details: err.details ?? [] },
     })
     return
   }
