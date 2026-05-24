@@ -7,6 +7,7 @@ import {
   assertYearsNotEmpty,
   assertYearDetailAvailable,
 } from './vehicleSearch.assertions'
+import { SearchResponseDto, YearDetailResponseDto } from './vehicleSearch.dto'
 
 export class VehicleSearchService {
   constructor(
@@ -22,7 +23,13 @@ export class VehicleSearchService {
     const cached = await this.repository.findVehicleWithYears(fipeCode)
 
     if (cached && cached.years.length > 0) {
-      return this.toCachedSearchResponse(cached)
+      return SearchResponseDto.create({
+        fipeCode: cached.fipeCode,
+        vehicleType: cached.vehicleType as VehicleType,
+        years: cached.years.map((y) => ({ code: y.yearCode, name: y.yearLabel })),
+        brand: cached.brand,
+        model: cached.model,
+      })
     }
 
     const years = await this.fipeClient.fetchYears(type, fipeCode)
@@ -36,7 +43,11 @@ export class VehicleSearchService {
       await this.repository.createYears(vehicleId, years)
     }
 
-    return this.toApiSearchResponse(fipeCode, type, cached, years)
+    return SearchResponseDto.create({
+      fipeCode,
+      vehicleType: type as VehicleType,
+      years,
+    })
   }
 
   /** Get detailed info for a single year, from cache or the FIPE API. */
@@ -52,7 +63,19 @@ export class VehicleSearchService {
     assertYearExists(yearRow, yearCode)
 
     if (yearRow.fetchedAt) {
-      return this.toCachedYearDetailResponse(vehicle, yearRow, fipeCode)
+      return YearDetailResponseDto.create({
+        vehicleId: vehicle.id,
+        fipeCode,
+        vehicleType: vehicle.vehicleType as VehicleType,
+        yearCode: yearRow.yearCode,
+        yearLabel: yearRow.yearLabel,
+        brand: vehicle.brand,
+        model: vehicle.model,
+        price: yearRow.price,
+        fuel: yearRow.fuel,
+        referenceMonth: yearRow.referenceMonth,
+        fuelAcronym: yearRow.fuelAcronym,
+      })
     }
 
     const detail = await this.fipeClient.fetchYearDetail(type, fipeCode, yearCode)
@@ -73,73 +96,7 @@ export class VehicleSearchService {
       )
     }
 
-    return this.toApiYearDetailResponse(vehicle, yearRow, detail)
-  }
-
-  // -----------------------------------------------------------
-  // Private helpers — response mapping
-  // -----------------------------------------------------------
-
-  private toCachedSearchResponse(cached: {
-    fipeCode: string
-    vehicleType: string
-    brand: string | null
-    model: string | null
-    years: { yearCode: string; yearLabel: string }[]
-  }): SearchResponse {
-    return {
-      fipeCode: cached.fipeCode,
-      vehicleType: cached.vehicleType as VehicleType,
-      brand: cached.brand,
-      model: cached.model,
-      years: cached.years.map((y) => ({ code: y.yearCode, name: y.yearLabel })),
-      source: 'cache',
-    }
-  }
-
-  private toApiSearchResponse(
-    fipeCode: string,
-    type: string,
-    cached: { brand: string | null; model: string | null } | null,
-    years: { code: string; name: string }[],
-  ): SearchResponse {
-    return {
-      fipeCode,
-      vehicleType: type as VehicleType,
-      brand: cached?.brand ?? null,
-      model: cached?.model ?? null,
-      years: years.map((y) => ({ code: y.code, name: y.name })),
-      source: 'api',
-    }
-  }
-
-  private toCachedYearDetailResponse(
-    vehicle: { id: number; vehicleType: string; brand: string | null; model: string | null },
-    yearRow: { yearCode: string; yearLabel: string; price: string | null; fuel: string | null; referenceMonth: string | null; fuelAcronym: string | null },
-    fipeCode: string,
-  ): YearDetailResponse {
-    return {
-      vehicleId: vehicle.id,
-      fipeCode,
-      vehicleType: vehicle.vehicleType as VehicleType,
-      yearCode: yearRow.yearCode,
-      yearLabel: yearRow.yearLabel,
-      brand: vehicle.brand,
-      model: vehicle.model,
-      price: yearRow.price ?? '',
-      fuel: yearRow.fuel ?? '',
-      referenceMonth: yearRow.referenceMonth ?? '',
-      fuelAcronym: yearRow.fuelAcronym ?? '',
-      source: 'cache',
-    }
-  }
-
-  private toApiYearDetailResponse(
-    vehicle: { id: number; vehicleType: string; fipeCode: string },
-    yearRow: { yearCode: string; yearLabel: string },
-    detail: { brand: string; model: string; price: string; fuel: string; referenceMonth: string; fuelAcronym: string },
-  ): YearDetailResponse {
-    return {
+    return YearDetailResponseDto.create({
       vehicleId: vehicle.id,
       fipeCode: vehicle.fipeCode,
       vehicleType: vehicle.vehicleType as VehicleType,
@@ -151,7 +108,6 @@ export class VehicleSearchService {
       fuel: detail.fuel,
       referenceMonth: detail.referenceMonth,
       fuelAcronym: detail.fuelAcronym,
-      source: 'api',
-    }
+    })
   }
 }
