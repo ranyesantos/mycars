@@ -4,6 +4,7 @@ import {
   validateVehicleSearchParams,
   validateYearDetailParams,
 } from './vehicleSearch.validator'
+import { asyncHandler } from '../../shared/utils/asyncHandler'
 
 export function createVehicleSearchRoutes(
   service: VehicleSearchService,
@@ -13,37 +14,29 @@ export function createVehicleSearchRoutes(
   router.get(
     '/api/vehicle/:type/:fipeCode',
     validateVehicleSearchParams,
-    async (req, res, next) => {
-      try {
-        const { type, fipeCode } = req.params as Record<string, string>
-        const result = await service.searchByFipeCode(type, fipeCode)
+    asyncHandler(async (req, res) => {
+      const { type, fipeCode } = req.params as Record<string, string>
+      const result = await service.searchByFipeCode(type, fipeCode)
 
-        res.json({
-          success: true,
-          data: result,
-        })
-      } catch (err) {
-        next(err)
-      }
-    },
+      res.json({
+        success: true,
+        data: result,
+      })
+    }),
   )
 
   router.get(
     '/api/vehicle/:type/:fipeCode/years/:yearCode',
     validateYearDetailParams,
-    async (req, res, next) => {
-      try {
-        const { type, fipeCode, yearCode } = req.params as Record<string, string>
-        const result = await service.getYearDetail(type, fipeCode, yearCode)
+    asyncHandler(async (req, res) => {
+      const { type, fipeCode, yearCode } = req.params as Record<string, string>
+      const result = await service.getYearDetail(type, fipeCode, yearCode)
 
-        res.json({
-          success: true,
-          data: result,
-        })
-      } catch (err) {
-        next(err)
-      }
-    },
+      res.json({
+        success: true,
+        data: result,
+      })
+    }),
   )
 
   return router
