@@ -12,7 +12,6 @@ export interface YearDetailResponse {
   fuel: string
   referenceMonth: string
   fuelAcronym: string
-  source: 'cache' | 'api'
 }
 
 export interface SearchResponse {
@@ -21,5 +20,4 @@ export interface SearchResponse {
   brand: string | null
   model: string | null
   years: { code: string; name: string }[]
-  source: 'cache' | 'api'
 }
