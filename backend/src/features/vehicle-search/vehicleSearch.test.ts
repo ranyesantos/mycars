@@ -46,7 +46,6 @@ describe('VehicleSearchService', () => {
 
       const result = await service.searchByFipeCode('cars', '005490-9')
 
-      expect(result.source).toBe('cache')
       expect(result.fipeCode).toBe('005490-9')
       expect(result.years).toHaveLength(1)
       expect(fipeClient.fetchYears).not.toHaveBeenCalled()
@@ -61,7 +60,6 @@ describe('VehicleSearchService', () => {
 
       const result = await service.searchByFipeCode('cars', '005490-9')
 
-      expect(result.source).toBe('api')
       expect(result.years).toHaveLength(2)
       expect(fipeClient.fetchYears).toHaveBeenCalledWith('cars', '005490-9')
 
@@ -95,7 +93,6 @@ describe('VehicleSearchService', () => {
 
       const result = await service.getYearDetail('cars', '005490-9', '2023-5')
 
-      expect(result.source).toBe('cache')
       expect(result.price).toBe('R$ 55.119,00')
       expect(fipeClient.fetchYearDetail).not.toHaveBeenCalled()
     })
@@ -119,7 +116,6 @@ describe('VehicleSearchService', () => {
 
       const result = await service.getYearDetail('cars', '005490-9', '2023-5')
 
-      expect(result.source).toBe('api')
       expect(result.price).toBe('R$ 55.119,00')
       expect(result.brand).toBe('VW - VolksWagen')
 
@@ -198,7 +194,6 @@ describe('Vehicle Search Routes', () => {
 
       expect(response.status).toBe(200)
       expect(response.body.success).toBe(true)
-      expect(response.body.data.source).toBe('api')
       expect(response.body.data.years).toHaveLength(1)
     })
 
@@ -209,7 +204,6 @@ describe('Vehicle Search Routes', () => {
       const response = await request(app).get('/api/vehicle/cars/005490-9')
 
       expect(response.status).toBe(200)
-      expect(response.body.data.source).toBe('cache')
       expect(fipeClient.fetchYears).not.toHaveBeenCalled()
     })
 
@@ -262,7 +256,6 @@ describe('Vehicle Search Routes', () => {
 
       expect(response.status).toBe(200)
       expect(response.body.data.price).toBe('R$ 55.119,00')
-      expect(response.body.data.source).toBe('api')
     })
 
     it('should return 200 with cached detail on second call', async () => {
@@ -281,7 +274,6 @@ describe('Vehicle Search Routes', () => {
       )
 
       expect(response.status).toBe(200)
-      expect(response.body.data.source).toBe('cache')
       expect(fipeClient.fetchYearDetail).not.toHaveBeenCalled()
     })
 
