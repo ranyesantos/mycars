@@ -1,15 +1,5 @@
 import type { PrismaClient, Vehicle } from '@prisma/client'
-
-export type FavoriteWithYears = Vehicle & {
-  years: {
-    yearCode: string
-    yearLabel: string
-    price: string | null
-    fuel: string | null
-    referenceMonth: string | null
-    fuelAcronym: string | null
-  }[]
-}
+import type { FavoriteWithYears } from './favoriteVehicle.types'
 
 export class FavoriteVehicleRepository {
   constructor(private readonly db: PrismaClient) {}
@@ -17,6 +7,28 @@ export class FavoriteVehicleRepository {
   /** Find a vehicle by FIPE code, or null if not found. */
   async findByFipeCode(fipeCode: string): Promise<Vehicle | null> {
     return this.db.vehicle.findUnique({ where: { fipeCode } })
+  }
+
+  /** Find a vehicle by FIPE code with its years eagerly loaded. */
+  async findByFipeCodeWithYears(
+    fipeCode: string,
+  ): Promise<FavoriteWithYears | null> {
+    return this.db.vehicle.findUnique({
+      where: { fipeCode },
+      include: {
+        years: {
+          select: {
+            yearCode: true,
+            yearLabel: true,
+            price: true,
+            fuel: true,
+            referenceMonth: true,
+            fuelAcronym: true,
+          },
+          orderBy: { yearCode: 'asc' },
+        },
+      },
+    }) as Promise<FavoriteWithYears | null>
   }
 
   /** Set the favorited flag on a vehicle. */

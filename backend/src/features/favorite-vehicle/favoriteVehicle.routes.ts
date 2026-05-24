@@ -3,20 +3,16 @@ import type { FavoriteVehicleRepository } from './favoriteVehicle.repository'
 import { validateFavoriteParams } from './favoriteVehicle.validator'
 import { asyncHandler } from '../../shared/utils/asyncHandler'
 import { NotFoundError } from '../../shared/errors/NotFoundError'
-import type { FavoriteResponse } from './favoriteVehicle.types'
+import type { FavoriteResponse, FavoriteWithYears } from './favoriteVehicle.types'
 
-function toFavoriteResponse(
-  repo: Awaited<
-    ReturnType<FavoriteVehicleRepository['listFavorites']>
-  >[number],
-): FavoriteResponse {
+function toFavoriteResponse(item: FavoriteWithYears): FavoriteResponse {
   return {
-    fipeCode: repo.fipeCode,
-    vehicleType: repo.vehicleType,
-    brand: repo.brand,
-    model: repo.model,
+    fipeCode: item.fipeCode,
+    vehicleType: item.vehicleType,
+    brand: item.brand,
+    model: item.model,
     favorited: true,
-    years: repo.years.map((y) => ({
+    years: item.years.map((y) => ({
       yearCode: y.yearCode,
       yearLabel: y.yearLabel,
       price: y.price,
@@ -37,7 +33,7 @@ export function createFavoriteVehicleRoutes(
     '/api/favorites/:type/:fipeCode',
     validateFavoriteParams,
     asyncHandler(async (req, res) => {
-      const { fipeCode } = req.params as Record<string, string>
+      const fipeCode: string = req.params.fipeCode as string
 
       const vehicle = await repository.findByFipeCode(fipeCode)
       if (!vehicle) {
@@ -49,21 +45,11 @@ export function createFavoriteVehicleRoutes(
 
       await repository.setFavorite(vehicle.id, true)
 
-      const favorites = await repository.listFavorites()
-      const favorite = favorites.find((f) => f.fipeCode === fipeCode)
+      const favorite = await repository.findByFipeCodeWithYears(fipeCode)
 
       res.json({
         success: true,
-        data: favorite
-          ? toFavoriteResponse(favorite)
-          : {
-              fipeCode,
-              vehicleType: vehicle.vehicleType,
-              brand: vehicle.brand,
-              model: vehicle.model,
-              favorited: true,
-              years: [],
-            },
+        data: toFavoriteResponse(favorite!),
       })
     }),
   )
@@ -73,7 +59,7 @@ export function createFavoriteVehicleRoutes(
     '/api/favorites/:type/:fipeCode',
     validateFavoriteParams,
     asyncHandler(async (req, res) => {
-      const { fipeCode } = req.params as Record<string, string>
+      const fipeCode: string = req.params.fipeCode as string
 
       const vehicle = await repository.findByFipeCode(fipeCode)
       if (!vehicle) {
