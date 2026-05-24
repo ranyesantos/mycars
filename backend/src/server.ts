@@ -6,6 +6,8 @@ import { FipeClient } from './shared/services/fipe/index'
 import { VehicleSearchRepository } from './features/vehicle-search/vehicleSearch.repository'
 import { VehicleSearchService } from './features/vehicle-search/vehicleSearch.service'
 import { createVehicleSearchRoutes } from './features/vehicle-search/index'
+import { FavoriteVehicleRepository } from './features/favorite-vehicle/favoriteVehicle.repository'
+import { createFavoriteVehicleRoutes } from './features/favorite-vehicle/index'
 import { getDb } from './db/index'
 
 const app = express()
@@ -19,12 +21,14 @@ const fipeClient = new FipeClient('https://fipe.parallelum.com.br/api/v2')
 const db = getDb()
 const vehicleSearchRepo = new VehicleSearchRepository(db)
 const vehicleSearchService = new VehicleSearchService(fipeClient, vehicleSearchRepo)
+const favoriteVehicleRepo = new FavoriteVehicleRepository(db)
 
 // Routes — register before errorHandler
 app.get('/api/health', (_req, res) => {
   res.json({ success: true, data: { status: 'ok' } })
 })
 app.use(createVehicleSearchRoutes(vehicleSearchService))
+app.use(createFavoriteVehicleRoutes(favoriteVehicleRepo))
 
 // Error handler must be last
 app.use(errorHandler)
