@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { Request, Response, NextFunction } from 'express'
-import { AppError } from '../../shared/errors/AppError'
+import { ValidationError } from '../../shared/errors/ValidationError'
 
 const vehicleTypeSchema = z.enum(['cars', 'trucks', 'motorcycles'])
 
@@ -38,7 +38,7 @@ export function validateVehicleSearchParams(
       message: issue.message,
     }))
 
-    return next(new AppError('VALIDATION_ERROR', 'Invalid request parameters', 400, details))
+    return next(new ValidationError('Invalid request parameters', details))
   }
 
   next()
@@ -57,7 +57,7 @@ export function validateYearDetailParams(
       message: issue.message,
     }))
 
-    return next(new AppError('VALIDATION_ERROR', 'Invalid request parameters', 400, details))
+    return next(new ValidationError('Invalid request parameters', details))
   }
 
   next()

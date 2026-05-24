@@ -10,6 +10,7 @@
 - 422 Unprocessable Entity — input is valid but semantically wrong
 - 429 Too Many Requests — rate limit hit
 - 500 Internal Server Error — unhandled server failure
+- 502 Bad Gateway — upstream service (FIPE API) unreachable or returned an error
 
 Never return 200 with an error body. Never return 500 for client mistakes.
 

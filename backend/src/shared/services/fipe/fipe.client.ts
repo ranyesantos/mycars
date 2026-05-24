@@ -1,4 +1,5 @@
 import type { FipeYear, FipeYearDetail, IFipeClient } from './fipe.types'
+import { AppError } from '../../errors/AppError'
 
 /** HTTP client for the FIPE vehicle pricing API (fipe.parallelum.com.br). */
 export class FipeClient implements IFipeClient {
@@ -33,17 +34,14 @@ export class FipeClient implements IFipeClient {
   }
 
   private async request(url: string): Promise<Response> {
-    let response: Response
-
-    try {
-      response = await fetch(url)
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error'
-      throw new Error(`FIPE API request failed: ${message}`)
-    }
+    const response = await fetch(url)
 
     if (!response.ok && response.status !== 404) {
-      throw new Error(`FIPE API error: ${response.status} ${response.statusText}`)
+      throw new AppError(
+        'FIPE_API_ERROR',
+        `FIPE API returned ${response.status}`,
+        502,
+      )
     }
 
     return response
