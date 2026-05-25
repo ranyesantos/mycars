@@ -33,6 +33,7 @@ export class FipeClient implements IFipeClient {
     return (await response.json()) as FipeYearDetail
   }
 
+  /** Fetch all brands for a vehicle type. Returns empty array on 404. */
   async fetchBrands(type: string): Promise<FipeBrand[]> {
     const url = `${this.baseUrl}/${type}/brands`
     const response = await this.request(url)
@@ -40,6 +41,7 @@ export class FipeClient implements IFipeClient {
     return (await response.json()) as FipeBrand[]
   }
 
+  /** Fetch all models for a vehicle type and brand. Returns empty array on 404. */
   async fetchModels(type: string, brandCode: string): Promise<FipeModel[]> {
     const url = `${this.baseUrl}/${type}/brands/${brandCode}/models`
     const response = await this.request(url)
@@ -47,6 +49,7 @@ export class FipeClient implements IFipeClient {
     return (await response.json()) as FipeModel[]
   }
 
+  /** Fetch available years for a brand/model combination. Returns empty array on 404. */
   async fetchYearsByBrandModel(
     type: string,
     brandCode: string,
@@ -58,6 +61,7 @@ export class FipeClient implements IFipeClient {
     return (await response.json()) as FipeYear[]
   }
 
+  /** Fetch price detail for a specific brand/model/year. Returns null on 404. */
   async fetchPriceByBrandModel(
     type: string,
     brandCode: string,

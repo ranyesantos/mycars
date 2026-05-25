@@ -25,17 +25,7 @@ export interface FipeModel {
   name: string
 }
 
-export interface FipePriceDetail {
-  vehicleType: number
-  price: string
-  brand: string
-  model: string
-  modelYear: number
-  fuel: string
-  codeFipe: string
-  referenceMonth: string
-  fuelAcronym: string
-}
+export interface FipePriceDetail extends FipeYearDetail {}
 
 export interface IFipeClient {
   fetchYears(type: string, fipeCode: string): Promise<FipeYear[]>
