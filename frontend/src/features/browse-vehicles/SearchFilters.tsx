@@ -43,7 +43,11 @@ export function SearchFilters({
       ) : (
         <Select value={selectedBrand} onValueChange={(v) => onBrandChange(v ?? '')}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select brand" />
+            <SelectValue placeholder="Select brand">
+              {(value: string) =>
+                brands.find((b) => b.code === value)?.name ?? value
+              }
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {brands.map((brand) => (
@@ -64,7 +68,11 @@ export function SearchFilters({
           disabled={!selectedBrand || models.length === 0}
         >
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select model" />
+            <SelectValue placeholder="Select model">
+              {(value: string) =>
+                models.find((m) => String(m.code) === value)?.name ?? value
+              }
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {models.map((model) => (
