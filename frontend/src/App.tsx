@@ -1,36 +1,31 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useState } from 'react'
-import { api } from './services/api.js'
+import { AddByFipeDialog } from './features/add-by-fipe'
+import { FavoriteListContainer } from './features/favorite-vehicle'
 
 const queryClient = new QueryClient()
 
 function AppContent() {
-  const [healthStatus, setHealthStatus] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  async function checkHealth() {
-    setIsLoading(true)
-    setError(null)
-    try {
-      const response = await api.get('/api/health')
-      setHealthStatus(response.data.data.status)
-    } catch {
-      setError('Backend is not reachable')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   return (
-    <div style={{ padding: '2rem', fontFamily: 'system-ui' }}>
-      <h1>MyCars</h1>
-      <button onClick={checkHealth} disabled={isLoading}>
-        {isLoading ? 'Checking...' : 'Check Backend Health'}
-      </button>
-      {healthStatus && <p>Backend status: {healthStatus}</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-    </div>
+    <main className="min-h-screen bg-background">
+      <div className="mx-auto max-w-4xl px-4 py-8">
+        <header className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">
+              MyCars
+            </h1>
+            <p className="mt-1 text-muted-foreground">
+              Track vehicle prices from the FIPE table
+            </p>
+          </div>
+          <AddByFipeDialog triggerVariant="default" />
+        </header>
+
+        <section>
+          <h2 className="mb-4 text-xl font-semibold">Favorites</h2>
+          <FavoriteListContainer />
+        </section>
+      </div>
+    </main>
   )
 }
 
