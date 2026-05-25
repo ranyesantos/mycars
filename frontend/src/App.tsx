@@ -1,10 +1,16 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom'
+import { Heart, Search } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { AddByFipeDialog } from './features/add-by-fipe'
-import { FavoriteListContainer } from './features/favorite-vehicle'
+import { HomePage } from './pages/HomePage'
+import { FavoritesPage } from './pages/FavoritesPage'
 
 const queryClient = new QueryClient()
 
-function AppContent() {
+function AppLayout() {
+  const location = useLocation()
+
   return (
     <main className="min-h-screen bg-background">
       <div className="mx-auto max-w-4xl px-4 py-8">
@@ -17,13 +23,35 @@ function AppContent() {
               Track vehicle prices from the FIPE table
             </p>
           </div>
-          <AddByFipeDialog triggerVariant="default" />
+          <div className="flex items-center gap-2">
+            <Link to="/">
+              <Button
+                variant={location.pathname === '/' ? 'secondary' : 'ghost'}
+                size="sm"
+                className="gap-2"
+              >
+                <Search className="size-4" />
+                Search
+              </Button>
+            </Link>
+            <Link to="/favorites">
+              <Button
+                variant={location.pathname === '/favorites' ? 'secondary' : 'ghost'}
+                size="sm"
+                className="gap-2"
+              >
+                <Heart className="size-4" />
+                Favorites
+              </Button>
+            </Link>
+            <AddByFipeDialog triggerVariant="default" />
+          </div>
         </header>
 
-        <section>
-          <h2 className="mb-4 text-xl font-semibold">Favorites</h2>
-          <FavoriteListContainer />
-        </section>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/favorites" element={<FavoritesPage />} />
+        </Routes>
       </div>
     </main>
   )
@@ -32,7 +60,9 @@ function AppContent() {
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppContent />
+      <BrowserRouter>
+        <AppLayout />
+      </BrowserRouter>
     </QueryClientProvider>
   )
 }
