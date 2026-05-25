@@ -300,4 +300,87 @@ describe('Vehicle Search Routes', () => {
       expect(response.body.error.code).toBe('VALIDATION_ERROR')
     })
   })
+
+  describe('GET /api/vehicle/:type/brands', () => {
+    it('should return 200 with brands list', async () => {
+      fipeClient.fetchBrands = vi.fn().mockResolvedValue([
+        { code: '59', name: 'VW - VolksWagen' },
+        { code: '1', name: 'Fiat' },
+      ])
+
+      const response = await request(app).get('/api/vehicle/cars/brands')
+
+      expect(response.status).toBe(200)
+      expect(response.body.success).toBe(true)
+      expect(response.body.data).toHaveLength(2)
+      expect(response.body.data[0].code).toBe('59')
+    })
+
+    it('should return 400 when vehicle type is invalid', async () => {
+      const response = await request(app).get('/api/vehicle/boats/brands')
+      expect(response.status).toBe(400)
+      expect(response.body.success).toBe(false)
+      expect(response.body.error.code).toBe('VALIDATION_ERROR')
+    })
+  })
+
+  describe('GET /api/vehicle/:type/brands/:brandCode/models', () => {
+    it('should return 200 with models list', async () => {
+      fipeClient.fetchModels = vi.fn().mockResolvedValue([
+        { code: 5940, name: 'Gol 1.0 Flex 12V 5p' },
+      ])
+      const response = await request(app).get('/api/vehicle/cars/brands/59/models')
+      expect(response.status).toBe(200)
+      expect(response.body.success).toBe(true)
+      expect(response.body.data).toHaveLength(1)
+    })
+  })
+
+  describe('GET /api/vehicle/:type/brands/:brandCode/models/:modelCode/years', () => {
+    it('should return 200 with years list', async () => {
+      fipeClient.fetchYearsByBrandModel = vi.fn().mockResolvedValue([
+        { code: '2012-1', name: '2012 Gasolina' },
+      ])
+      const response = await request(app).get(
+        '/api/vehicle/cars/brands/59/models/5940/years',
+      )
+      expect(response.status).toBe(200)
+      expect(response.body.success).toBe(true)
+      expect(response.body.data).toHaveLength(1)
+    })
+  })
+
+  describe('GET /api/vehicle/:type/brands/:brandCode/models/:modelCode/years/:yearCode', () => {
+    it('should return 200 with price detail and create vehicle in DB', async () => {
+      fipeClient.fetchPriceByBrandModel = vi.fn().mockResolvedValue({
+        vehicleType: 1,
+        price: 'R$ 22.000,00',
+        brand: 'VW - VolksWagen',
+        model: 'Gol 1.0 Flex 12V 5p',
+        modelYear: 2012,
+        fuel: 'Gasolina',
+        codeFipe: '005490-9',
+        referenceMonth: 'maio de 2026',
+        fuelAcronym: 'G',
+      })
+
+      const response = await request(app).get(
+        '/api/vehicle/cars/brands/59/models/5940/years/2012-1',
+      )
+
+      expect(response.status).toBe(200)
+      expect(response.body.success).toBe(true)
+      expect(response.body.data.fipeCode).toBe('005490-9')
+      expect(response.body.data.price).toBe('R$ 22.000,00')
+    })
+
+    it('should return 404 when year not available', async () => {
+      fipeClient.fetchPriceByBrandModel = vi.fn().mockResolvedValue(null)
+      const response = await request(app).get(
+        '/api/vehicle/cars/brands/59/models/5940/years/9999-9',
+      )
+      expect(response.status).toBe(404)
+      expect(response.body.success).toBe(false)
+    })
+  })
 })
