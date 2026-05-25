@@ -27,6 +27,33 @@ export interface YearDetailResponse {
   fuelAcronym: string
 }
 
+export interface Brand {
+  code: string
+  name: string
+}
+
+export interface Model {
+  code: number
+  name: string
+}
+
+export interface CascadingYear {
+  code: string
+  name: string
+}
+
+export interface BrandModelPriceResponse {
+  fipeCode: string
+  brand: string
+  model: string
+  modelYear: number
+  price: string
+  fuel: string
+  referenceMonth: string
+  fuelAcronym: string
+  vehicleType: number
+}
+
 export interface FavoriteVehicle {
   fipeCode: string
   vehicleType: string
