@@ -1,4 +1,4 @@
-import type { FipeYear, FipeYearDetail, IFipeClient } from './fipe.types'
+import type { FipeBrand, FipeModel, FipePriceDetail, FipeYear, FipeYearDetail, IFipeClient } from './fipe.types'
 import { AppError } from '../../errors/AppError'
 
 /** HTTP client for the FIPE vehicle pricing API (fipe.parallelum.com.br). */
@@ -31,6 +31,43 @@ export class FipeClient implements IFipeClient {
     }
 
     return (await response.json()) as FipeYearDetail
+  }
+
+  async fetchBrands(type: string): Promise<FipeBrand[]> {
+    const url = `${this.baseUrl}/${type}/brands`
+    const response = await this.request(url)
+    if (response.status === 404) return []
+    return (await response.json()) as FipeBrand[]
+  }
+
+  async fetchModels(type: string, brandCode: string): Promise<FipeModel[]> {
+    const url = `${this.baseUrl}/${type}/brands/${brandCode}/models`
+    const response = await this.request(url)
+    if (response.status === 404) return []
+    return (await response.json()) as FipeModel[]
+  }
+
+  async fetchYearsByBrandModel(
+    type: string,
+    brandCode: string,
+    modelCode: number,
+  ): Promise<FipeYear[]> {
+    const url = `${this.baseUrl}/${type}/brands/${brandCode}/models/${modelCode}/years`
+    const response = await this.request(url)
+    if (response.status === 404) return []
+    return (await response.json()) as FipeYear[]
+  }
+
+  async fetchPriceByBrandModel(
+    type: string,
+    brandCode: string,
+    modelCode: number,
+    yearCode: string,
+  ): Promise<FipePriceDetail | null> {
+    const url = `${this.baseUrl}/${type}/brands/${brandCode}/models/${modelCode}/years/${yearCode}`
+    const response = await this.request(url)
+    if (response.status === 404) return null
+    return (await response.json()) as FipePriceDetail
   }
 
   private async request(url: string): Promise<Response> {

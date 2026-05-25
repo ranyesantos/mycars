@@ -13,6 +13,10 @@ function createMockFipeClient(overrides?: Partial<IFipeClient>): IFipeClient {
   const mock: IFipeClient = {
     fetchYears: vi.fn().mockResolvedValue([]),
     fetchYearDetail: vi.fn().mockResolvedValue(null),
+    fetchBrands: vi.fn().mockResolvedValue([]),
+    fetchModels: vi.fn().mockResolvedValue([]),
+    fetchYearsByBrandModel: vi.fn().mockResolvedValue([]),
+    fetchPriceByBrandModel: vi.fn().mockResolvedValue(null),
     ...overrides,
   }
   return mock
