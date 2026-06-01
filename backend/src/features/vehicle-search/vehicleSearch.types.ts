@@ -21,3 +21,30 @@ export interface SearchResponse {
   model: string | null
   years: { code: string; name: string }[]
 }
+
+export interface BrandResponse {
+  code: string
+  name: string
+}
+
+export interface ModelResponse {
+  code: number
+  name: string
+}
+
+export interface CascadingYear {
+  code: string
+  name: string
+}
+
+export interface BrandModelPriceResponse {
+  fipeCode: string
+  brand: string
+  model: string
+  modelYear: number
+  price: string
+  fuel: string
+  referenceMonth: string
+  fuelAcronym: string
+  vehicleType: number
+}
