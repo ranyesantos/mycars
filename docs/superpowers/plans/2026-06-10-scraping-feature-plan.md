@@ -626,6 +626,22 @@ export class ScrapeDetailsRepository {
     })
   }
 
+  /** Find stale pending scraping jobs for the recovery sweeper. */
+  async findStalePendingScrapingJobs(
+    staleThresholdMs: number,
+  ): Promise<{ jobId: string; payload: string; createdAt: Date }[]> {
+    const cutoff = new Date(Date.now() - staleThresholdMs)
+    return this.db.job.findMany({
+      where: {
+        type: 'scrape_details',
+        status: 'pending',
+        createdAt: { lt: cutoff },
+      },
+      select: { jobId: true, payload: true, createdAt: true },
+      orderBy: { createdAt: 'asc' },
+    })
+  }
+
   /** Upsert technical specs for a vehicle year and mark job done, in a single transaction. */
   async saveSpecsAndMarkDone(
     jobId: string,
@@ -833,12 +849,12 @@ export class ScrapeDetailsService {
         { jobId, attempts: 3, backoff: { type: 'exponential', delay: 60_000 } },
       )
     } catch (error) {
-      // If enqueue to Redis fails, we still have the job row.
-      // The error propagates so the caller knows something went wrong.
+      // Redis is down — leave the row as "pending" so the recovery sweeper
+      // in the worker will pick it up when Redis comes back.
       throw new AppError(
-        'QUEUE_ERROR',
-        'Failed to enqueue scraping job',
-        500,
+        'QUEUE_UNAVAILABLE',
+        'Queue temporarily unavailable, job will resume automatically',
+        503,
       )
     }
 
@@ -1480,12 +1496,71 @@ worker.on('failed', async (job, error) => {
   }
 })
 
+// --- Recovery sweeper ---
+// Picks up jobs that were inserted into SQLite but never reached Redis
+// (e.g., Redis was down when POST /api/scraping was called).
+// Runs every 30 seconds. Enqueues stale pending rows and marks failed
+// rows that are too old to recover.
+const SWEEP_INTERVAL_MS = 30_000
+const STALE_THRESHOLD_MS = 60_000         // 1 minute — enqueue these
+const ABANDON_THRESHOLD_MS = 3_600_000    // 1 hour — mark these permanently failed
+
+setInterval(async () => {
+  try {
+    const stalePendingJobs = await repository.findStalePendingScrapingJobs(STALE_THRESHOLD_MS)
+
+    for (const job of stalePendingJobs) {
+      try {
+        const payload = JSON.parse(job.payload) as { vehicleYearId: number; url: string }
+        const { getScrapingQueue } = await import('../../../shared/queue/scrapingQueue')
+        await getScrapingQueue().add(
+          { jobId: job.jobId, vehicleYearId: payload.vehicleYearId, url: payload.url },
+          { jobId: job.jobId, attempts: 3, backoff: { type: 'exponential', delay: 60_000 } },
+        )
+
+        console.log(
+          JSON.stringify({
+            timestamp: new Date().toISOString(),
+            level: 'info',
+            event: 'recovery_enqueued',
+            jobId: job.jobId,
+          }),
+        )
+      } catch {
+        // Redis still down — if the job was created over an hour ago, give up
+        const age = Date.now() - new Date(job.createdAt).getTime()
+        if (age > ABANDON_THRESHOLD_MS) {
+          await repository.markJobFailed(
+            job.jobId,
+            'Queue unavailable for over 1 hour — recovery abandoned',
+          )
+
+          console.log(
+            JSON.stringify({
+              timestamp: new Date().toISOString(),
+              level: 'error',
+              event: 'recovery_abandoned',
+              jobId: job.jobId,
+              age_ms: age,
+            }),
+          )
+        }
+        // Otherwise leave it pending — we'll try again in the next sweep
+      }
+    }
+  } catch (error) {
+    // Sweeper errors must not crash the worker
+    console.error('Recovery sweeper error:', error)
+  }
+}, SWEEP_INTERVAL_MS)
+
 console.log(
   JSON.stringify({
     timestamp: new Date().toISOString(),
     level: 'info',
     message: 'Scraping worker running',
     queue: SCRAPING_QUEUE_NAME,
+    recoverySweepIntervalMs: SWEEP_INTERVAL_MS,
   }),
 )
 ```
