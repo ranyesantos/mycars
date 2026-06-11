@@ -11,8 +11,8 @@ const TEST_DB_PATH = path.resolve(__dirname, '..', '..', 'test.db')
 const TEST_DB_URL = `file:${TEST_DB_PATH.replace(/\\/g, '/')}`
 
 export function createTestDb(): PrismaClient {
-  // Apply migrations to the test database (non-destructive, idempotent)
-  execSync('npx prisma migrate deploy', {
+  // Sync the schema directly to the test database (fresh DB each run)
+  execSync('npx prisma db push --accept-data-loss', {
     cwd: path.resolve(__dirname, '..', '..'),
     env: { ...process.env, DATABASE_URL: TEST_DB_URL },
     stdio: 'pipe',
