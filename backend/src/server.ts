@@ -8,6 +8,10 @@ import { VehicleSearchService } from './features/vehicle-search/vehicleSearch.se
 import { createVehicleSearchRoutes } from './features/vehicle-search/index'
 import { FavoriteVehicleRepository } from './features/favorite-vehicle/favoriteVehicle.repository'
 import { createFavoriteVehicleRoutes } from './features/favorite-vehicle/index'
+import { ScrapeDetailsRepository } from './features/scrape-details/index'
+import { ScrapeDetailsService } from './features/scrape-details/index'
+import { createScrapeDetailsRoutes } from './features/scrape-details/index'
+import { getScrapingQueue } from './shared/queue/scrapingQueue'
 import { getDb } from './db/index'
 
 const app = express()
@@ -22,6 +26,9 @@ const db = getDb()
 const vehicleSearchRepo = new VehicleSearchRepository(db)
 const vehicleSearchService = new VehicleSearchService(fipeClient, vehicleSearchRepo)
 const favoriteVehicleRepo = new FavoriteVehicleRepository(db)
+const scrapeDetailsRepo = new ScrapeDetailsRepository(db)
+const scrapingQueue = getScrapingQueue()
+const scrapeDetailsService = new ScrapeDetailsService(scrapeDetailsRepo, scrapingQueue)
 
 // Routes — register before errorHandler
 app.get('/api/health', (_req, res) => {
@@ -29,6 +36,7 @@ app.get('/api/health', (_req, res) => {
 })
 app.use(createVehicleSearchRoutes(vehicleSearchService))
 app.use(createFavoriteVehicleRoutes(favoriteVehicleRepo))
+app.use(createScrapeDetailsRoutes(scrapeDetailsService))
 
 // Error handler must be last
 app.use(errorHandler)
