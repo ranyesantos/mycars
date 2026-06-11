@@ -23,6 +23,8 @@ export function createTestDb(): PrismaClient {
 }
 
 export async function clearTestDb(db: PrismaClient): Promise<void> {
+  await db.job.deleteMany()
+  await db.technicalSpecs.deleteMany()
   await db.vehicleYear.deleteMany()
   await db.vehicle.deleteMany()
 }
