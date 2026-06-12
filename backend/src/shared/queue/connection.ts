@@ -1,19 +1,23 @@
-import IORedis from 'ioredis'
+export interface RedisConfig {
+  host: string
+  port: number
+}
 
-let connection: IORedis | null = null
+let config: RedisConfig | null = null
 
-/** Returns a singleton Redis connection. Creates one if it doesn't exist. */
-export function getRedisConnection(): IORedis {
-  if (connection) return connection
+/**
+ * Returns Redis connection configuration for BullMQ.
+ * Returns a plain config object rather than a Redis instance so BullMQ
+ * creates its own IORedis connection using its bundled ioredis version,
+ * avoiding type incompatibilities between the project's ioredis and
+ * BullMQ's bundled ioredis.
+ */
+export function getRedisConnection(): RedisConfig {
+  if (config) return config
 
   const host = process.env.REDIS_HOST ?? 'localhost'
   const port = Number(process.env.REDIS_PORT ?? 6379)
 
-  connection = new IORedis({
-    host,
-    port,
-    maxRetriesPerRequest: null, // Required by BullMQ
-  })
-
-  return connection
+  config = { host, port }
+  return config
 }
