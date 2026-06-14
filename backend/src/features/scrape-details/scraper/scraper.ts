@@ -7,11 +7,11 @@ import type { ScrapedVehicleDetails, TypedFields } from './scraper.types'
  * Labels not in this map still end up in rawData.
  */
 const LABEL_TO_FIELD: Record<string, keyof TypedFields> = {
-  Cilindrada: 'engine',
+  'Cilindrada': 'engine',
   'Potência máxima': 'powerHp',
   'Torque máximo': 'torque',
-  Câmbio: 'transmission',
-  Combustível: 'fuelType',
+  'Câmbio': 'transmission',
+  'Combustível': 'fuelType',
   'Urbano (G)': 'consumptionCity',
   'Rodoviário (G)': 'consumptionHighway',
 }
@@ -21,7 +21,8 @@ const BROWSER_USER_AGENT =
 
 /**
  * Fetches a URL and extracts all vehicle technical specifications.
- * Throws on network error or timeout.
+ * Throws on network error, timeout, empty page, or if no recognized fields
+ * are found on the page.
  */
 export async function scrape(url: string): Promise<ScrapedVehicleDetails> {
   const response = await axios.get(url, {
@@ -70,6 +71,11 @@ export function scrapeFromHtml(html: string): ScrapedVehicleDetails {
     if (field) {
       typed[field] = value
     }
+  }
+
+  const hasAnyField = Object.values(typed).some((v) => v !== null)
+  if (!hasAnyField) {
+    throw new Error('No recognized fields found on the page')
   }
 
   return {

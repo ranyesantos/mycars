@@ -31,7 +31,7 @@ export class ScrapeDetailsRepository {
     return this.db.job.findFirst({
       where: {
         idempotencyKey,
-        status: { in: ['pending', 'processing', 'retrying'] },
+        status: { in: ['pending', 'processing', 'retrying', 'done'] },
       },
       select: { jobId: true },
     })
@@ -80,19 +80,19 @@ export class ScrapeDetailsRepository {
     })
   }
 
-  /** Update job status to done. */
-  async markJobDone(jobId: string): Promise<void> {
+  /** Update job status to done with the actual attempt count. */
+  async markJobDone(jobId: string, attempts: number): Promise<void> {
     await this.db.job.update({
       where: { jobId },
-      data: { status: 'done', updatedAt: new Date(), attempts: { increment: 1 } },
+      data: { status: 'done', updatedAt: new Date(), attempts },
     })
   }
 
-  /** Update job status to failed with an error message. */
-  async markJobFailed(jobId: string, error: string): Promise<void> {
+  /** Update job status to failed with an error message and the actual attempt count. */
+  async markJobFailed(jobId: string, error: string, attempts: number): Promise<void> {
     await this.db.job.update({
       where: { jobId },
-      data: { status: 'failed', error, updatedAt: new Date(), attempts: { increment: 1 } },
+      data: { status: 'failed', error, updatedAt: new Date(), attempts },
     })
   }
 
@@ -125,6 +125,7 @@ export class ScrapeDetailsRepository {
     consumptionCity: string | null,
     consumptionHighway: string | null,
     rawData: string,
+    attempts: number,
   ): Promise<void> {
     await this.db.$transaction([
       this.db.technicalSpecs.upsert({
@@ -157,7 +158,7 @@ export class ScrapeDetailsRepository {
       }),
       this.db.job.update({
         where: { jobId },
-        data: { status: 'done', updatedAt: new Date(), attempts: { increment: 1 } },
+        data: { status: 'done', updatedAt: new Date(), attempts },
       }),
     ])
   }

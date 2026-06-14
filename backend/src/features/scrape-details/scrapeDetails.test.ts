@@ -7,7 +7,10 @@ import { ScrapeDetailsService } from './scrapeDetails.service'
 import { createScrapeDetailsRoutes } from './scrapeDetails.routes'
 import { errorHandler } from '../../shared/middleware/errorHandler'
 import { createTestDb, clearTestDb, closeTestDb } from '../../db/test-helpers'
-import type { IScrapingQueue, ScrapingJobData } from '../../shared/queue/scrapingQueue'
+import type { IScrapingQueue } from '../../shared/queue/scrapingQueue'
+
+const VALID_URL = 'https://www.test-allowed-domain.test/carros/test'
+const INVALID_DOMAIN_URL = 'https://www.other-site.com/carros/test'
 
 function createMockQueue(): IScrapingQueue {
   return {
@@ -70,7 +73,7 @@ describe('Scrape Details Routes', () => {
         .send({
           vehicleId,
           yearCode,
-          url: 'https://www.fichacompleta.com.br/carros/volkswagen/gol-1-0-2012-flex',
+          url: VALID_URL,
         })
 
       expect(response.status).toBe(202)
@@ -88,7 +91,7 @@ describe('Scrape Details Routes', () => {
         .send({
           vehicleId,
           yearCode,
-          url: 'https://www.fichacompleta.com.br/carros/volkswagen/gol-1-0-2012-flex',
+          url: VALID_URL,
         })
 
       const second = await request(app)
@@ -96,7 +99,7 @@ describe('Scrape Details Routes', () => {
         .send({
           vehicleId,
           yearCode,
-          url: 'https://www.fichacompleta.com.br/carros/volkswagen/gol-1-0-2012-flex',
+          url: VALID_URL,
         })
 
       expect(second.status).toBe(200)
@@ -111,7 +114,7 @@ describe('Scrape Details Routes', () => {
         .send({
           vehicleId: 9999,
           yearCode: '2012-1',
-          url: 'https://www.fichacompleta.com.br/carros/volkswagen/gol-1-0-2012-flex',
+          url: VALID_URL,
         })
 
       expect(response.status).toBe(404)
@@ -127,7 +130,7 @@ describe('Scrape Details Routes', () => {
         .send({
           vehicleId,
           yearCode: '9999-9',
-          url: 'https://www.fichacompleta.com.br/carros/volkswagen/gol-1-0-2012-flex',
+          url: VALID_URL,
         })
 
       expect(response.status).toBe(404)
@@ -143,7 +146,7 @@ describe('Scrape Details Routes', () => {
         .send({
           vehicleId,
           yearCode,
-          url: 'https://www.other-site.com/carros/volkswagen/gol',
+          url: INVALID_DOMAIN_URL,
         })
 
       expect(response.status).toBe(400)
@@ -157,7 +160,7 @@ describe('Scrape Details Routes', () => {
         .send({
           vehicleId: -1,
           yearCode: '2012-1',
-          url: 'https://www.fichacompleta.com.br/carros/volkswagen/gol-1-0-2012-flex',
+          url: VALID_URL,
         })
 
       expect(response.status).toBe(400)
@@ -173,7 +176,7 @@ describe('Scrape Details Routes', () => {
         .send({
           vehicleId,
           yearCode: 'invalid',
-          url: 'https://www.fichacompleta.com.br/carros/volkswagen/gol-1-0-2012-flex',
+          url: VALID_URL,
         })
 
       expect(response.status).toBe(400)
@@ -191,7 +194,7 @@ describe('Scrape Details Routes', () => {
         .send({
           vehicleId,
           yearCode,
-          url: 'https://www.fichacompleta.com.br/carros/volkswagen/gol-1-0-2012-flex',
+          url: VALID_URL,
         })
 
       const jobId = enqueueRes.body.data.jobId as string

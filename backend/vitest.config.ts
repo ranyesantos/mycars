@@ -5,6 +5,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     fileParallelism: false,
+    setupFiles: ['./vitest.setup.ts'],
     env: {
       DATABASE_URL: 'file:../test.db',
     },

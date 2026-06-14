@@ -6,6 +6,8 @@ import { ScrapeDetailsRepository } from '../scrapeDetails.repository'
 import { scrape } from '../scraper/scraper'
 import { getDb } from '../../../db/index'
 
+const MAX_JOB_ATTEMPTS = 3
+
 const connection = getRedisConnection()
 const db = getDb()
 const repository = new ScrapeDetailsRepository(db)
@@ -43,7 +45,7 @@ const worker = new Worker<ScrapingJobData>(
     )
 
     const specs = await scrape(url)
-
+    console.log(specs,'specs')
     const typedFields = {
       engine: specs.engine,
       powerHp: specs.powerHp,
@@ -53,6 +55,7 @@ const worker = new Worker<ScrapingJobData>(
       consumptionCity: specs.consumptionCity,
       consumptionHighway: specs.consumptionHighway,
     }
+    console.log(typedFields)
     const fieldsFilled = Object.values(typedFields).filter((v) => v !== null).length
 
     console.log(
@@ -78,6 +81,7 @@ const worker = new Worker<ScrapingJobData>(
       specs.consumptionCity,
       specs.consumptionHighway,
       specs.rawData,
+      job.attemptsMade + 1,
     )
 
     console.log(
@@ -102,7 +106,7 @@ const worker = new Worker<ScrapingJobData>(
 )
 
 // Retry event — update status before BullMQ retries
-worker.on('active', async (job) => {
+worker.on('active', async (job: BullJob<ScrapingJobData>) => {
   // Mark as retrying if this is not the first attempt
   if (job.attemptsMade > 0) {
     await repository.markJobRetrying(job.data.jobId)
@@ -112,18 +116,20 @@ worker.on('active', async (job) => {
 // Permanent failure
 worker.on('failed', async (job, error) => {
   if (job) {
+    const attempts = job.attemptsMade + 1
+
     console.log(
       JSON.stringify({
         timestamp: new Date().toISOString(),
         level: 'error',
         event: 'job_permanently_failed',
         jobId: job.data.jobId,
-        totalAttempts: 3,
+        totalAttempts: MAX_JOB_ATTEMPTS,
         error: error.message,
       }),
     )
 
-    await repository.markJobFailed(job.data.jobId, error.message)
+    await repository.markJobFailed(job.data.jobId, error.message, attempts)
   }
 })
 
@@ -136,7 +142,7 @@ const SWEEP_INTERVAL_MS = 30_000
 const STALE_THRESHOLD_MS = 60_000         // 1 minute — enqueue these
 const ABANDON_THRESHOLD_MS = 3_600_000    // 1 hour — mark these permanently failed
 
-setInterval(async () => {
+const sweepInterval = setInterval(async () => {
   try {
     const stalePendingJobs = await repository.findStalePendingScrapingJobs(STALE_THRESHOLD_MS)
 
@@ -146,7 +152,7 @@ setInterval(async () => {
         const { getScrapingQueue } = await import('../../../shared/queue/scrapingQueue')
         await getScrapingQueue().add(
           { jobId: job.jobId, vehicleYearId: payload.vehicleYearId, url: payload.url },
-          { jobId: job.jobId, attempts: 3, backoff: { type: 'exponential', delay: 60_000 } },
+          { jobId: job.jobId, attempts: MAX_JOB_ATTEMPTS, backoff: { type: 'exponential', delay: 60_000 } },
         )
 
         console.log(
@@ -164,6 +170,7 @@ setInterval(async () => {
           await repository.markJobFailed(
             job.jobId,
             'Queue unavailable for over 1 hour — recovery abandoned',
+            0, // never processed by BullMQ
           )
 
           console.log(
@@ -194,3 +201,21 @@ console.log(
     recoverySweepIntervalMs: SWEEP_INTERVAL_MS,
   }),
 )
+
+// --- Graceful shutdown ---
+function gracefulShutdown(signal: string): void {
+  console.log(
+    JSON.stringify({
+      timestamp: new Date().toISOString(),
+      level: 'info',
+      event: 'worker_shutdown',
+      signal,
+    }),
+  )
+
+  clearInterval(sweepInterval)
+  worker.close().then(() => process.exit(0))
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'))
+process.on('SIGINT', () => gracefulShutdown('SIGINT'))

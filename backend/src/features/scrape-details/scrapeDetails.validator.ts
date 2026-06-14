@@ -2,8 +2,6 @@ import { z } from 'zod'
 import type { Request, Response, NextFunction } from 'express'
 import { ValidationError } from '../../shared/errors/ValidationError'
 
-const ALLOWED_DOMAIN = 'fichacompleta.com.br'
-
 const enqueueScrapingSchema = z.object({
   vehicleId: z
     .number({ message: 'vehicleId must be a number' })
@@ -21,7 +19,8 @@ const enqueueScrapingSchema = z.object({
       (url) => {
         try {
           const host = new URL(url).hostname
-          return host === ALLOWED_DOMAIN || host.endsWith('.' + ALLOWED_DOMAIN)
+          const allowedDomain = process.env.SCRAPING_ALLOWED_DOMAIN
+          return host === allowedDomain || host.endsWith('.' + allowedDomain)
         } catch {
           return false
         }

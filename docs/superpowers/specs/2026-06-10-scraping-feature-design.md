@@ -109,7 +109,7 @@ Enqueue a scraping job.
 | Duplicate (same idempotency key, pending/processing/retrying) | 200 | `{ success: true, data: { jobId, status: "already_queued" } }` |
 | Vehicle not found | 404 | `{ error: { code: "VEHICLE_NOT_FOUND" } }` |
 | Year not found for vehicle | 404 | `{ error: { code: "YEAR_NOT_FOUND" } }` |
-| Invalid URL domain | 400 | `{ error: { code: "INVALID_DOMAIN" } }` |
+| Invalid URL domain | 400 | `{ error: { code: "VALIDATION_ERROR" } }` |
 | Validation error | 400 | `{ error: { code: "VALIDATION_ERROR", message, details } }` |
 
 **Validation rules:**

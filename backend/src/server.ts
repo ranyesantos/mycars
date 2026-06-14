@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
 import { errorHandler } from './shared/middleware/errorHandler'
@@ -40,7 +41,7 @@ app.use(createScrapeDetailsRoutes(scrapeDetailsService))
 
 // Error handler must be last
 app.use(errorHandler)
-
+console.log(process.env.NODE_ENV)
 if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
     logger.info(`Server running on http://localhost:${PORT}`)

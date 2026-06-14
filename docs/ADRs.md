@@ -56,3 +56,6 @@ Scraping the vehicle's details involves:
 - The admin polls GET ```/api/scraping/:jobId/status``` to check progress
 - Failed scrapes are routed to a dead letter queue and retried up to 3 times with exponential backoff
 - A worker process runs separately from the Express server
+
+**Idempotency notes**
+- Idempotency key: `sha256(vehicleYearId + url)`. A job is considered a duplicate if an existing job with the same key has status `pending`, `processing`, `retrying`, or `done` — i.e., **any completed or active job blocks re-enqueuing for the same vehicle-year + URL pair.** Once a vehicle-year/URL combination has been scraped successfully (status `done`), the system intentionally prevents re-scraping that exact combination. If updated specs are needed, the frontend should surface the existing data rather than re-scraping.
