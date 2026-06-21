@@ -24,42 +24,38 @@ export function VehicleDetailPage() {
 
   if (isLoading) {
     return (
-      <main className="min-h-screen bg-background">
-        <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-          <Skeleton className="mb-6 h-9 w-32" />
-          <Skeleton className="mb-4 h-10 w-3/4" />
-          <Skeleton className="mb-8 h-6 w-1/2" />
-          <div className="grid gap-6 md:grid-cols-2">
-            <Skeleton className="h-48" />
-            <Skeleton className="h-48" />
-          </div>
+      <>
+        <Skeleton className="mb-6 h-9 w-32" />
+        <Skeleton className="mb-4 h-10 w-3/4" />
+        <Skeleton className="mb-8 h-6 w-1/2" />
+        <div className="grid gap-6 md:grid-cols-2">
+          <Skeleton className="h-48" />
+          <Skeleton className="h-48" />
         </div>
-      </main>
+      </>
     )
   }
 
   if (error || !vehicleData) {
     return (
-      <main className="min-h-screen bg-background">
-        <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-          <Link to="/">
-            <Button variant="ghost" className="mb-6 gap-2">
-              <ArrowLeft className="size-4" />
-              Back to search
-            </Button>
-          </Link>
-          <Card className="border-destructive/20 bg-destructive/10">
-            <CardContent className="py-8 text-center">
-              <p className="text-destructive">
-                {error?.message || 'Vehicle not found'}
-              </p>
-              <Link to="/" className="mt-4 inline-block">
-                <Button>Return to Home</Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
+      <>
+        <Link to="/">
+          <Button variant="ghost" className="mb-6 gap-2">
+            <ArrowLeft className="size-4" />
+            Back to search
+          </Button>
+        </Link>
+        <Card className="border-destructive/20 bg-destructive/10">
+          <CardContent className="py-8 text-center">
+            <p className="text-destructive">
+              {error?.message || 'Vehicle not found'}
+            </p>
+            <Link to="/" className="mt-4 inline-block">
+              <Button>Return to Home</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </>
     )
   }
 
@@ -79,23 +75,21 @@ export function VehicleDetailPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background">
-      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-        <Link to="/">
-          <Button variant="ghost" className="mb-6 gap-2">
-            <ArrowLeft className="size-4" />
-            Back to search
-          </Button>
-        </Link>
+    <>
+      <Link to="/">
+        <Button variant="ghost" className="mb-6 gap-2">
+          <ArrowLeft className="size-4" />
+          Back to search
+        </Button>
+      </Link>
 
-        <VehicleHero
-          data={vehicleData}
-          isFavorite={isFavorite}
-          onToggleFavorite={handleToggleFavorite}
-        />
+      <VehicleHero
+        data={vehicleData}
+        isFavorite={isFavorite}
+        onToggleFavorite={handleToggleFavorite}
+      />
 
-        <VehicleTechnicalSpecs data={vehicleData} />
-      </div>
-    </main>
+      <VehicleTechnicalSpecs data={vehicleData} />
+    </>
   )
 }

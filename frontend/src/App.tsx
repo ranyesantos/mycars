@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { AddByFipeDialog } from './features/add-by-fipe'
 import { HomePage } from './pages/HomePage'
 import { FavoritesPage } from './pages/FavoritesPage'
+import { VehicleDetailPage } from './features/vehicle-detail'
 
 const queryClient = new QueryClient()
 
@@ -51,6 +52,7 @@ function AppLayout() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/favorites" element={<FavoritesPage />} />
+          <Route path="/vehicle/:fipeCode/:yearCode" element={<VehicleDetailPage />} />
         </Routes>
       </div>
     </main>
