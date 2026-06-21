@@ -45,18 +45,11 @@ const worker = new Worker<ScrapingJobData>(
     )
 
     const specs = await scrape(url)
-    console.log(specs,'specs')
-    const typedFields = {
-      engine: specs.engine,
-      powerHp: specs.powerHp,
-      torque: specs.torque,
-      transmission: specs.transmission,
-      fuelType: specs.fuelType,
-      consumptionCity: specs.consumptionCity,
-      consumptionHighway: specs.consumptionHighway,
-    }
-    console.log(typedFields)
-    const fieldsFilled = Object.values(typedFields).filter((v) => v !== null).length
+
+    // Count non-null fields (excluding rawData)
+    const fieldsForCount = { ...specs } as Record<string, unknown>
+    delete fieldsForCount.rawData
+    const fieldsFilled = Object.values(fieldsForCount).filter((v) => v !== null).length
 
     console.log(
       JSON.stringify({
@@ -73,15 +66,9 @@ const worker = new Worker<ScrapingJobData>(
       jobId,
       vehicleYearId,
       url,
-      specs.engine,
-      specs.powerHp,
-      specs.torque,
-      specs.transmission,
-      specs.fuelType,
-      specs.consumptionCity,
-      specs.consumptionHighway,
       specs.rawData,
       job.attemptsMade + 1,
+      specs, // FullSpecFields — all known columns passed through
     )
 
     console.log(
