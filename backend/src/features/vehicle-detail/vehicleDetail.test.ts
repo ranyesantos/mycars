@@ -120,7 +120,7 @@ describe('Vehicle Detail Routes', () => {
       expect(response.body.error.code).toBe('VEHICLE_NOT_FOUND')
     })
 
-    it('should return 200 with specs: null when yearCode does not match', async () => {
+    it('should return 404 when yearCode does not match', async () => {
       const { fipeCode } = await seedVehicleWithYearNoSpecs()
 
       const response = await request(app).get(`/api/vehicles/${fipeCode}/2099-1/specs`)
