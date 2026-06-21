@@ -13,6 +13,8 @@ import { ScrapeDetailsRepository } from './features/scrape-details/index'
 import { ScrapeDetailsService } from './features/scrape-details/index'
 import { createScrapeDetailsRoutes } from './features/scrape-details/index'
 import { getScrapingQueue } from './shared/queue/scrapingQueue'
+import { VehicleDetailRepository } from './features/vehicle-detail/index'
+import { createVehicleDetailRoutes } from './features/vehicle-detail/index'
 import { getDb } from './db/index'
 
 const app = express()
@@ -30,6 +32,7 @@ const favoriteVehicleRepo = new FavoriteVehicleRepository(db)
 const scrapeDetailsRepo = new ScrapeDetailsRepository(db)
 const scrapingQueue = getScrapingQueue()
 const scrapeDetailsService = new ScrapeDetailsService(scrapeDetailsRepo, scrapingQueue)
+const vehicleDetailRepo = new VehicleDetailRepository(db)
 
 // Routes — register before errorHandler
 app.get('/api/health', (_req, res) => {
@@ -38,6 +41,7 @@ app.get('/api/health', (_req, res) => {
 app.use(createVehicleSearchRoutes(vehicleSearchService))
 app.use(createFavoriteVehicleRoutes(favoriteVehicleRepo))
 app.use(createScrapeDetailsRoutes(scrapeDetailsService))
+app.use(createVehicleDetailRoutes(vehicleDetailRepo))
 
 // Error handler must be last
 app.use(errorHandler)
