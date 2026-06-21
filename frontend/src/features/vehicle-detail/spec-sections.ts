@@ -10,7 +10,20 @@ export interface SpecFieldDef {
   label: string
 }
 
+export type SpecSectionId =
+  | 'performance'
+  | 'engine'
+  | 'transmission'
+  | 'dimensions'
+  | 'consumption'
+  | 'brakes'
+  | 'suspension'
+  | 'aerodynamics'
+  | 'steering'
+  | 'general'
+
 export interface SpecSectionDefinition {
+  id: SpecSectionId
   heading: string
   icon: LucideIcon
   fields: SpecFieldDef[]
@@ -21,16 +34,27 @@ export function pickSectionItems(
   specs: SpecsData,
   section: SpecSectionDefinition,
 ): { label: string; value: string }[] {
-  return section.fields
-    .filter((f) => specs[f.column] !== null)
-    .map((f) => ({
-      label: f.label,
-      value: specs[f.column] as string,
-    }))
+  const items: { label: string; value: string }[] = []
+  for (const field of section.fields) {
+    const value = specs[field.column]
+    if (value !== null) {
+      items.push({ label: field.label, value })
+    }
+  }
+  return items
+}
+
+export function getSectionById(id: SpecSectionId): SpecSectionDefinition {
+  const section = SPEC_SECTIONS.find((s) => s.id === id)
+  if (!section) {
+    throw new Error(`Unknown spec section id: ${id}`)
+  }
+  return section
 }
 
 export const SPEC_SECTIONS: SpecSectionDefinition[] = [
   {
+    id: 'performance',
     heading: 'Desempenho',
     icon: Zap,
     fields: [
@@ -44,6 +68,7 @@ export const SPEC_SECTIONS: SpecSectionDefinition[] = [
     ],
   },
   {
+    id: 'engine',
     heading: 'Motor',
     icon: Cpu,
     fields: [
@@ -73,6 +98,7 @@ export const SPEC_SECTIONS: SpecSectionDefinition[] = [
     ],
   },
   {
+    id: 'transmission',
     heading: 'Transmissão',
     icon: Cog,
     fields: [
@@ -84,6 +110,7 @@ export const SPEC_SECTIONS: SpecSectionDefinition[] = [
     ],
   },
   {
+    id: 'dimensions',
     heading: 'Dimensões',
     icon: Ruler,
     fields: [
@@ -100,6 +127,7 @@ export const SPEC_SECTIONS: SpecSectionDefinition[] = [
     ],
   },
   {
+    id: 'consumption',
     heading: 'Consumo',
     icon: Fuel,
     fields: [
@@ -114,6 +142,7 @@ export const SPEC_SECTIONS: SpecSectionDefinition[] = [
     ],
   },
   {
+    id: 'brakes',
     heading: 'Freios',
     icon: Disc,
     fields: [
@@ -123,6 +152,7 @@ export const SPEC_SECTIONS: SpecSectionDefinition[] = [
     ],
   },
   {
+    id: 'suspension',
     heading: 'Suspensão',
     icon: Car,
     fields: [
@@ -132,6 +162,7 @@ export const SPEC_SECTIONS: SpecSectionDefinition[] = [
     ],
   },
   {
+    id: 'aerodynamics',
     heading: 'Aerodinâmica',
     icon: Wind,
     fields: [
@@ -141,6 +172,7 @@ export const SPEC_SECTIONS: SpecSectionDefinition[] = [
     ],
   },
   {
+    id: 'steering',
     heading: 'Direção',
     icon: Navigation,
     fields: [
@@ -149,6 +181,7 @@ export const SPEC_SECTIONS: SpecSectionDefinition[] = [
     ],
   },
   {
+    id: 'general',
     heading: 'Geral',
     icon: Info,
     fields: [

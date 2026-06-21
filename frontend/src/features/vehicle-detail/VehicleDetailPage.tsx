@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ArrowLeft } from 'lucide-react'
 import { useVehicleSpecs } from '../../hooks/useVehicleSpecs'
 import { useFavorites, useAddFavorite, useRemoveFavorite } from '../../hooks/useFavorites'
+import { FavoritesButton } from '../favorite-vehicle'
 import { VehicleHero } from './VehicleHero'
 import { VehicleTechnicalSpecs } from './VehicleTechnicalSpecs'
 
@@ -84,8 +85,13 @@ export function VehicleDetailPage() {
 
       <VehicleHero
         data={vehicleData}
-        isFavorite={isFavorite}
-        onToggleFavorite={handleToggleFavorite}
+        favoriteAction={
+          <FavoritesButton
+            isFavorite={isFavorite}
+            onToggle={handleToggleFavorite}
+            size="default"
+          />
+        }
       />
 
       <VehicleTechnicalSpecs data={vehicleData} />

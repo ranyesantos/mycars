@@ -83,6 +83,12 @@ export interface SpecsData {
   highway_range_e: string | null
 }
 
+/** Columns that are metadata (not user-visible specs). Values are `keyof SpecsData`. */
+export const METADATA_COLUMNS: readonly (keyof SpecsData)[] = [
+  'sourceUrl',
+  'scrapedAt',
+] as const
+
 export interface VehicleSpecsResponse {
   fipeCode: string
   vehicleType: VehicleType

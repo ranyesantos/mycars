@@ -1,27 +1,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ExternalLink, Wrench } from 'lucide-react'
+import { Wrench } from 'lucide-react'
 import type { SpecsData, VehicleSpecsResponse } from '../../services/vehicleDetailApi'
-import { PerformanceSection } from './sections/PerformanceSection'
-import { EngineSection } from './sections/EngineSection'
-import { TransmissionSection } from './sections/TransmissionSection'
-import { DimensionsSection } from './sections/DimensionsSection'
-import { ConsumptionSection } from './sections/ConsumptionSection'
-import { BrakesSection } from './sections/BrakesSection'
-import { SuspensionSection } from './sections/SuspensionSection'
-import { AerodynamicsSection } from './sections/AerodynamicsSection'
-import { SteeringSection } from './sections/SteeringSection'
-import { GeneralSection } from './sections/GeneralSection'
+import { METADATA_COLUMNS } from '../../services/vehicleDetailApi'
+import { DomainSection } from './sections/DomainSection'
 
 interface VehicleTechnicalSpecsProps {
   data: VehicleSpecsResponse
 }
 
-const METADATA_KEYS = new Set<string>(['sourceUrl', 'scrapedAt'])
+const METADATA_COLUMNS_SET = new Set<string>(METADATA_COLUMNS)
 
 function countNonEmpty(specs: SpecsData): number {
   return Object.entries(specs)
-    .filter(([key, value]) => value !== null && !METADATA_KEYS.has(key))
+    .filter(([key, value]) => value !== null && !METADATA_COLUMNS_SET.has(key))
     .length
 }
 
@@ -59,32 +51,16 @@ export function VehicleTechnicalSpecs({ data }: VehicleTechnicalSpecsProps) {
         )}
       </CardHeader>
       <CardContent className="space-y-6">
-        <GeneralSection specs={specs} />
-        <PerformanceSection specs={specs} />
-        <EngineSection specs={specs} />
-        <TransmissionSection specs={specs} />
-        <DimensionsSection specs={specs} />
-        <ConsumptionSection specs={specs} />
-        <BrakesSection specs={specs} />
-        <SuspensionSection specs={specs} />
-        <AerodynamicsSection specs={specs} />
-        <SteeringSection specs={specs} />
-
-        <div className="flex items-center justify-between border-t border-border pt-4 text-xs text-muted-foreground">
-          <span>
-            Source data scraped on{' '}
-            {new Date(specs.scrapedAt).toLocaleDateString()}
-          </span>
-          <a
-            href={specs.sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-primary hover:underline"
-          >
-            View source
-            <ExternalLink className="size-3" />
-          </a>
-        </div>
+        <DomainSection id="general" specs={specs} />
+        <DomainSection id="performance" specs={specs} />
+        <DomainSection id="engine" specs={specs} />
+        <DomainSection id="transmission" specs={specs} />
+        <DomainSection id="dimensions" specs={specs} />
+        <DomainSection id="consumption" specs={specs} />
+        <DomainSection id="brakes" specs={specs} />
+        <DomainSection id="suspension" specs={specs} />
+        <DomainSection id="aerodynamics" specs={specs} />
+        <DomainSection id="steering" specs={specs} />
       </CardContent>
     </Card>
   )

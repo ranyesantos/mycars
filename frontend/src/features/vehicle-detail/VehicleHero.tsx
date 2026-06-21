@@ -1,17 +1,17 @@
+import type { ReactNode } from 'react'
 import { Car, Fuel, Calendar, Hash } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { FavoritesButton } from '../favorite-vehicle'
 import { formatPrice, parsePrice } from '../../services/types'
 import type { VehicleSpecsResponse } from '../../services/vehicleDetailApi'
 
 interface VehicleHeroProps {
   data: VehicleSpecsResponse
-  isFavorite: boolean
-  onToggleFavorite: () => void
+  /** Favorite toggle element injected by the parent to avoid cross-slice coupling. */
+  favoriteAction?: ReactNode
 }
 
-export function VehicleHero({ data, isFavorite, onToggleFavorite }: VehicleHeroProps) {
+export function VehicleHero({ data, favoriteAction }: VehicleHeroProps) {
   const name = data.brand && data.model
     ? `${data.brand} ${data.model}`
     : `FIPE ${data.fipeCode}`
@@ -33,11 +33,7 @@ export function VehicleHero({ data, isFavorite, onToggleFavorite }: VehicleHeroP
               <Car className="size-5" />
               <Badge variant="secondary">Vehicle</Badge>
             </div>
-            <FavoritesButton
-              isFavorite={isFavorite}
-              onToggle={onToggleFavorite}
-              size="default"
-            />
+            {favoriteAction}
           </div>
 
           <h1 className="mt-4 text-2xl font-bold tracking-tight text-foreground lg:text-3xl">

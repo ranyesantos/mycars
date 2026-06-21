@@ -66,11 +66,12 @@ export class ScrapeDetailsService {
     } catch (error) {
       // Redis is down — leave the row as "pending" so the recovery sweeper
       // in the worker will pick it up when Redis comes back.
+      // Include jobId in details so clients can poll job status later.
       throw new AppError(
         'QUEUE_UNAVAILABLE',
         'Queue temporarily unavailable, job will resume automatically',
         503,
-        [error instanceof Error ? error.message : String(error)],
+        [{ jobId }, error instanceof Error ? error.message : String(error)],
       )
     }
 
