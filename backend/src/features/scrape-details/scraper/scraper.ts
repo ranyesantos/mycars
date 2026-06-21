@@ -24,6 +24,7 @@ const LABEL_TO_FIELD: Record<string, keyof FullSpecFields> = {
   // Performance
   'Aceleração 0-100 km/h': 'acceleration_0_100',
   'Velocidade máxima': 'top_speed_g',
+  'Velocidade máxima (E)': 'top_speed_e',
   'Peso/potência': 'weight_power_ratio',
   'Peso/torque': 'weight_torque_ratio',
   'Potência específica': 'specific_power',
@@ -47,8 +48,10 @@ const LABEL_TO_FIELD: Record<string, keyof FullSpecFields> = {
   'Razão de compressão': 'compression_ratio',
   'Acionam. do comando': 'drive_actuation',
   'Potência máxima': 'power_hp_g',
+  'Potência máxima (E)': 'power_hp_e',
   'Regime potência máx.': 'max_power_rpm',
   'Torque máximo': 'torque_g',
+  'Torque máximo (E)': 'torque_e',
   'Regime torque máx.': 'max_torque_rpm',
 
   // Transmission
@@ -94,6 +97,10 @@ const LABEL_TO_FIELD: Record<string, keyof FullSpecFields> = {
   'Rodoviário (G)': 'highway_consumption_g',
   'Urbana (G)': 'city_range_g',
   'Rodoviária (G)': 'highway_range_g',
+  'Urbano (E)': 'city_consumption_e',
+  'Rodoviário (E)': 'highway_consumption_e',
+  'Urbana (E)': 'city_range_e',
+  'Rodoviária (E)': 'highway_range_e',
 
   // Legacy mappings — keep for backward compatibility
   'Cilindrada': 'displacement',
