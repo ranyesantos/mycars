@@ -1,4 +1,5 @@
 import { api } from './api'
+import type { VehicleType } from './types'
 
 /** Matches the backend's SpecsRow, keeping snake_case from the JSON response. */
 export interface SpecsData {
@@ -84,7 +85,7 @@ export interface SpecsData {
 
 export interface VehicleSpecsResponse {
   fipeCode: string
-  vehicleType: string
+  vehicleType: VehicleType
   yearCode: string
   brand: string | null
   model: string | null

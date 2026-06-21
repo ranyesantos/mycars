@@ -17,8 +17,12 @@ interface VehicleTechnicalSpecsProps {
   data: VehicleSpecsResponse
 }
 
+const METADATA_KEYS = new Set<string>(['sourceUrl', 'scrapedAt'])
+
 function countNonEmpty(specs: SpecsData): number {
-  return Object.values(specs).filter((v) => v !== null).length - 2 // exclude sourceUrl, scrapedAt
+  return Object.entries(specs)
+    .filter(([key, value]) => value !== null && !METADATA_KEYS.has(key))
+    .length
 }
 
 export function VehicleTechnicalSpecs({ data }: VehicleTechnicalSpecsProps) {

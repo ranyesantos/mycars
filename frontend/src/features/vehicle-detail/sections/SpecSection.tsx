@@ -1,4 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
+import { SpecItem } from './SpecItem'
 
 interface SpecItemData {
   label: string
@@ -22,15 +23,12 @@ export function SpecSection({ heading, icon: Icon, items }: SpecSectionProps) {
       </h3>
       <dl className="grid gap-x-6 gap-y-2 sm:grid-cols-2">
         {items.map((item, i) => (
-          <div
+          <SpecItem
             key={`${item.label}-${i}`}
-            className={`flex flex-wrap items-baseline justify-between gap-2 ${i < items.length - 1 ? 'border-b border-border/50' : 'border-0'} pb-2`}
-          >
-            <dt className="text-sm text-muted-foreground">{item.label}</dt>
-            <dd className="text-right text-sm font-medium text-foreground">
-              {item.value}
-            </dd>
-          </div>
+            label={item.label}
+            value={item.value}
+            isLast={i === items.length - 1}
+          />
         ))}
       </dl>
     </section>

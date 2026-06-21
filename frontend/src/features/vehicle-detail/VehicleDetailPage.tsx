@@ -7,7 +7,6 @@ import { useVehicleSpecs } from '../../hooks/useVehicleSpecs'
 import { useFavorites, useAddFavorite, useRemoveFavorite } from '../../hooks/useFavorites'
 import { VehicleHero } from './VehicleHero'
 import { VehicleTechnicalSpecs } from './VehicleTechnicalSpecs'
-import type { VehicleType } from '../../services/types'
 
 export function VehicleDetailPage() {
   const { fipeCode, yearCode } = useParams<{ fipeCode: string; yearCode: string }>()
@@ -60,17 +59,17 @@ export function VehicleDetailPage() {
   }
 
   const isFavorite = favorites.some(
-    (f) => f.fipeCode === vehicleData.fipeCode && f.years?.some((y) => y.yearCode === vehicleData.yearCode),
+    (f) => f.fipeCode === vehicleData.fipeCode,
   )
 
   const handleToggleFavorite = () => {
     if (isFavorite) {
       removeFavorite(
-        vehicleData.vehicleType as VehicleType,
+        vehicleData.vehicleType,
         vehicleData.fipeCode,
       )
     } else {
-      addFavorite(vehicleData.vehicleType as VehicleType, vehicleData.fipeCode)
+      addFavorite(vehicleData.vehicleType, vehicleData.fipeCode)
     }
   }
 
