@@ -1,4 +1,4 @@
-import type { Vehicle } from '@prisma/client'
+import type { Vehicle } from '../../generated/prisma/client'
 
 export type FavoriteWithYears = Vehicle & {
   years: {

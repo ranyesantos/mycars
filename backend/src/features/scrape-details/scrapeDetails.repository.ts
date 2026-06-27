@@ -1,4 +1,4 @@
-import type { PrismaClient } from '@prisma/client'
+import type { PrismaClient } from '../../generated/prisma/client'
 import type { JobStatus, ScrapingJobPayload } from './scrapeDetails.types'
 import type { FullSpecFields } from './scraper/scraper.types'
 

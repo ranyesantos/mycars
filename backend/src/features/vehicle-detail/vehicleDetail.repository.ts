@@ -1,4 +1,4 @@
-import type { PrismaClient, TechnicalSpecs } from '@prisma/client'
+import type { PrismaClient, TechnicalSpecs } from '../../generated/prisma/client'
 
 /** Flat technical specs as returned from the DB (Prisma camelCase). */
 export interface SpecsRow {

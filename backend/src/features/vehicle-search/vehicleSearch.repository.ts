@@ -1,4 +1,4 @@
-import type { Prisma, PrismaClient, Vehicle, VehicleYear } from '@prisma/client'
+import type { Prisma, PrismaClient, Vehicle, VehicleYear } from '../../generated/prisma/client'
 
 export type VehicleWithYearsPayload = Prisma.VehicleGetPayload<{
   include: {
