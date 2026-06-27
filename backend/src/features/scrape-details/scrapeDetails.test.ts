@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeAll, afterAll, beforeEach } from 'vitest'
-import type { PrismaClient } from '@prisma/client'
+import type { PrismaClient } from '../../generated/prisma/client'
 import express from 'express'
 import request from 'supertest'
 import { ScrapeDetailsRepository } from './scrapeDetails.repository'
@@ -24,8 +24,8 @@ describe('Scrape Details Routes', () => {
   let mockQueue: IScrapingQueue
   let app: express.Express
 
-  beforeAll(() => {
-    db = createTestDb()
+  beforeAll(async () => {
+    db = await createTestDb()
   })
 
   beforeEach(async () => {

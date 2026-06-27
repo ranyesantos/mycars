@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest'
-import type { PrismaClient } from '@prisma/client'
+import type { PrismaClient } from '../../generated/prisma/client'
 import express from 'express'
 import request from 'supertest'
 import { FavoriteVehicleRepository } from './favoriteVehicle.repository'
@@ -14,8 +14,8 @@ describe('Favorite Vehicle Routes', () => {
   let vehicleSearchRepo: VehicleSearchRepository
   let app: express.Express
 
-  beforeAll(() => {
-    db = createTestDb()
+  beforeAll(async () => {
+    db = await createTestDb()
   })
 
   beforeEach(async () => {
