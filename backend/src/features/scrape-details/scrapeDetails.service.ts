@@ -4,7 +4,6 @@ import type { ScrapeDetailsRepository } from './scrapeDetails.repository'
 import type { IScrapingQueue } from '../../shared/queue/scrapingQueue'
 import type { EnqueueScrapingInput, JobStatusResponse } from './scrapeDetails.types'
 import { NotFoundError } from '../../shared/errors/NotFoundError'
-import { AppError } from '../../shared/errors/AppError'
 
 /**
  * Handles enqueuing scraping jobs and polling job status.
@@ -63,16 +62,11 @@ export class ScrapeDetailsService {
         { jobId, vehicleYearId: year.id, url: input.url },
         { jobId, attempts: 3, backoff: { type: 'exponential', delay: 60_000 } },
       )
-    } catch (error) {
-      // Redis is down — leave the row as "pending" so the recovery sweeper
-      // in the worker will pick it up when Redis comes back.
-      // Include jobId in details so clients can poll job status later.
-      throw new AppError(
-        'QUEUE_UNAVAILABLE',
-        'Queue temporarily unavailable, job will resume automatically',
-        503,
-        [{ jobId }, error instanceof Error ? error.message : String(error)],
-      )
+    } catch {
+      // Redis is down — the job row is already saved as "pending" in the DB.
+      // The recovery sweeper in the worker will enqueue it when Redis is back.
+      // Return success so the client can poll the jobId immediately.
+      return { jobId, status: 'pending' }
     }
 
     return { jobId, status: 'pending' }
