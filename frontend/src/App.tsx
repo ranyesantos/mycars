@@ -7,7 +7,14 @@ import { HomePage } from './pages/HomePage'
 import { FavoritesPage } from './pages/FavoritesPage'
 import { VehicleDetailPage } from './features/vehicle-detail'
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000,
+    },
+  },
+})
 
 function AppLayout() {
   const location = useLocation()

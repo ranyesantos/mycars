@@ -7,7 +7,8 @@ on:
     branches: [main, dev]
 
 env:
-  NODE_VERSION: 22.x
+  NODE_VERSION: 24.x
+  DATABASE_URL: file:./.dev/pglite
 
 jobs:
 
