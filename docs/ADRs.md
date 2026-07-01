@@ -38,29 +38,24 @@
 
 ---
 
-### ADR-005 · RabbitMQ for async scraping jobs
+### ADR-005 · BullMQ for async scraping jobs
 
 **Disclaimer** I've said before the application will not use some queue tools for now, because I wanted less complexity as possible in this application, but I think the correct implementation of queues will make the scraping flow work better and it will directly impact positively the rest of the entire application (also i want to overengineering XD)
 
-**Decision:** Use RabbitMQ to process vehicle detail scraping asynchronously instead of running the scraper synchronously in the HTTP request.
+**Decision** Use BullMQ to process vehicle detail scraping asynchronously instead of running the scraper synchronously in the HTTP request.
 
 **Reason**
-Scraping fichacompleta.com.br involves:
+Scraping the vehicle's details involves:
 - An HTTP request to an external site (latency unpredictable)
 - HTML parsing (CPU bound)
 - A DB write on completion
-
-Doing this synchronously blocks the admin's request for several
-seconds and has no retry capability if the scrape fails.
-RabbitMQ decouples the HTTP response from the scraping execution,
-gives the admin instant feedback, and handles retries automatically
-through dead letter queues.
+> Doing this synchronously blocks the admin's request for several seconds and has no retry capability if the scrape fails. BullMQ decouples the HTTP response from the scraping execution, gives the admin instant feedback, and handles retries automatically through dead letter queues.
 
 **Consequences**
-- The POST /api/scraping route becomes non-blocking — it enqueues
-  a job and returns 202 Accepted immediately
-- The admin polls GET /api/scraping/:jobId/status to check progress
-- Failed scrapes are routed to a dead letter queue and retried
-  up to 3 times with exponential backoff
-- RabbitMQ must be running locally (Docker) for the app to work
+- The POST /api/scraping route becomes non-blocking, it enqueues a job and returns 202 Accepted immediately
+- The admin polls GET ```/api/scraping/:jobId/status``` to check progress
+- Failed scrapes are routed to a dead letter queue and retried up to 3 times with exponential backoff
 - A worker process runs separately from the Express server
+
+**Idempotency notes**
+- Idempotency key: `sha256(vehicleYearId + url)`. A job is considered a duplicate if an existing job with the same key has status `pending`, `processing`, `retrying`, or `done` — i.e., **any completed or active job blocks re-enqueuing for the same vehicle-year + URL pair.** Once a vehicle-year/URL combination has been scraped successfully (status `done`), the system intentionally prevents re-scraping that exact combination. If updated specs are needed, the frontend should surface the existing data rather than re-scraping.

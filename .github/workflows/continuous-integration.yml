@@ -7,7 +7,8 @@ on:
     branches: [main, dev]
 
 env:
-  NODE_VERSION: 22.x
+  NODE_VERSION: 24.x
+  DATABASE_URL: file:./.dev/pglite
 
 jobs:
 
@@ -30,8 +31,6 @@ jobs:
 
       - name: Generate Prisma client
         run: cd backend && npx prisma generate
-        env:
-          DATABASE_URL: "file:../test.db"
 
       - name: Type check backend
         run: cd backend && npx tsc --noEmit
@@ -55,13 +54,6 @@ jobs:
 
       - name: Generate Prisma client
         run: cd backend && npx prisma generate
-        env:
-          DATABASE_URL: "file:../test.db"
-
-      - name: Run migrations
-        run: cd backend && npx prisma migrate deploy
-        env:
-          DATABASE_URL: "file:../test.db"
 
       - name: Run tests
         run: cd backend && npm test
@@ -86,8 +78,6 @@ jobs:
 
       - name: Generate Prisma client
         run: cd backend && npx prisma generate
-        env:
-          DATABASE_URL: "file:../test.db"
 
       - name: Build backend
         run: cd backend && npm run build

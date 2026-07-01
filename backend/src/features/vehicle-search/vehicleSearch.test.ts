@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from 'vitest'
-import type { PrismaClient } from '@prisma/client'
+import type { PrismaClient } from '../../generated/prisma/client'
 import express from 'express'
 import request from 'supertest'
 import { VehicleSearchRepository } from './vehicleSearch.repository'
@@ -28,8 +28,8 @@ describe('VehicleSearchService', () => {
   let fipeClient: IFipeClient
   let service: VehicleSearchService
 
-  beforeAll(() => {
-    db = createTestDb()
+  beforeAll(async () => {
+    db = await createTestDb()
   })
 
   beforeEach(async () => {
@@ -169,8 +169,8 @@ describe('Vehicle Search Routes', () => {
   let fipeClient: IFipeClient
   let app: express.Express
 
-  beforeAll(() => {
-    db = createTestDb()
+  beforeAll(async () => {
+    db = await createTestDb()
   })
 
   beforeEach(async () => {

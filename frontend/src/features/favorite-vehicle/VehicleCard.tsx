@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Car, Bike } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -62,11 +63,19 @@ export function VehicleCard({
                   </Badge>
                 )}
               </div>
-              {year.price && (
-                <span className="text-sm font-semibold">
-                  {formatPrice(parsePrice(year.price))}
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                {year.price && (
+                  <span className="text-sm font-semibold">
+                    {formatPrice(parsePrice(year.price))}
+                  </span>
+                )}
+                <Link
+                  to={`/vehicle/${fipeCode}/${year.yearCode}`}
+                  className="shrink-0 text-xs text-primary hover:underline"
+                >
+                  Ver Detalhes →
+                </Link>
+              </div>
             </div>
           ))}
         </div>

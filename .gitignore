@@ -6,3 +6,9 @@ dist/
 .DS_Store
 *.log
 .claude/settings.local.json
+/frontend_preview
+backend/.env.test
+backend/.dev/
+.not-committed/
+pglite/
+backend/.env.test

@@ -10,12 +10,6 @@ import type {
 } from './vehicleSearch.types'
 import { NotFoundError } from '../../shared/errors/NotFoundError'
 import type { VehicleSearchRepository } from './vehicleSearch.repository'
-import {
-  assertVehicleExists,
-  assertYearExists,
-  assertYearsNotEmpty,
-  assertYearDetailAvailable,
-} from './vehicleSearch.assertions'
 import { SearchResponseDto, YearDetailResponseDto } from './vehicleSearch.dto'
 
 export class VehicleSearchService {
@@ -42,7 +36,9 @@ export class VehicleSearchService {
     }
 
     const years = await this.fipeClient.fetchYears(type, fipeCode)
-    assertYearsNotEmpty(years)
+    if (years.length === 0) {
+      throw new NotFoundError('FIPE_CODE_NOT_FOUND', 'No vehicles found for this FIPE code')
+    }
 
     const vehicleId = cached
       ? cached.id
@@ -66,10 +62,14 @@ export class VehicleSearchService {
     yearCode: string,
   ): Promise<YearDetailResponse> {
     const vehicle = await this.repository.findByFipeCode(fipeCode)
-    assertVehicleExists(vehicle, fipeCode)
+    if (!vehicle) {
+      throw new NotFoundError('VEHICLE_NOT_FOUND', `Vehicle ${fipeCode} not found`)
+    }
 
     const yearRow = await this.repository.findYearByCode(vehicle.id, yearCode)
-    assertYearExists(yearRow, yearCode)
+    if (!yearRow) {
+      throw new NotFoundError('YEAR_NOT_FOUND', `Year ${yearCode} not found for this vehicle`)
+    }
 
     if (yearRow.fetchedAt) {
       return YearDetailResponseDto.create({
@@ -88,7 +88,12 @@ export class VehicleSearchService {
     }
 
     const detail = await this.fipeClient.fetchYearDetail(type, fipeCode, yearCode)
-    assertYearDetailAvailable(detail)
+    if (!detail) {
+      throw new NotFoundError(
+        'YEAR_NOT_AVAILABLE',
+        'Year detail not available for this vehicle',
+      )
+    }
 
     await this.repository.updateYearDetail(yearRow.id, {
       price: detail.price,

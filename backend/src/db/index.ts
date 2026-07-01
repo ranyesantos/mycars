@@ -1,5 +1,5 @@
-import { PrismaClient } from '@prisma/client'
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
+import { PrismaClient } from '../generated/prisma/client'
+import { PrismaPg } from '@prisma/adapter-pg'
 import 'dotenv/config'
 
 let db: PrismaClient | null = null
@@ -11,7 +11,7 @@ export function getDb(): PrismaClient {
   if (!url) {
     throw new Error('DATABASE_URL environment variable is required')
   }
-  const adapter = new PrismaBetterSqlite3({ url })
+  const adapter = new PrismaPg({ connectionString: url })
   db = new PrismaClient({ adapter })
   return db
 }

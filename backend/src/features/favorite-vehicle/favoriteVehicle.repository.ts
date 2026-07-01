@@ -1,4 +1,4 @@
-import type { PrismaClient, Vehicle } from '@prisma/client'
+import type { PrismaClient, Vehicle } from '../../generated/prisma/client'
 import type { FavoriteWithYears } from './favoriteVehicle.types'
 
 export class FavoriteVehicleRepository {

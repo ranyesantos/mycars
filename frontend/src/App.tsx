@@ -5,8 +5,16 @@ import { Button } from '@/components/ui/button'
 import { AddByFipeDialog } from './features/add-by-fipe'
 import { HomePage } from './pages/HomePage'
 import { FavoritesPage } from './pages/FavoritesPage'
+import { VehicleDetailPage } from './features/vehicle-detail'
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000,
+    },
+  },
+})
 
 function AppLayout() {
   const location = useLocation()
@@ -51,6 +59,7 @@ function AppLayout() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/favorites" element={<FavoritesPage />} />
+          <Route path="/vehicle/:fipeCode/:yearCode" element={<VehicleDetailPage />} />
         </Routes>
       </div>
     </main>

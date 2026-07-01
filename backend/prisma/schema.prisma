@@ -1,69 +1,162 @@
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
 }
 
 model Vehicle {
-  id           Int              @id @default(autoincrement())
-  fipeCode     String           @unique @map("fipe_code")
-  vehicleType  String           @map("vehicle_type")
-  brand        String?
-  model        String?
-  favorited    Int              @default(0)
-  fetchedAt    DateTime         @default(now()) @map("fetched_at")
-  updatedAt    DateTime         @updatedAt @map("updated_at")
-  years        VehicleYear[]
-  scrapes      ScrapingDetail[]
+  id              Int              @id @default(autoincrement())
+  fipeCode        String           @unique @map("fipe_code")
+  vehicleType     String           @map("vehicle_type")
+  brand           String?
+  model           String?
+  favorited       Int              @default(0)
+  fetchedAt       DateTime         @default(now()) @map("fetched_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  years           VehicleYear[]
 
   @@map("vehicles")
 }
 
 model VehicleYear {
-  id             Int       @id @default(autoincrement())
-  vehicleId      Int       @map("vehicle_id")
-  yearCode       String    @map("year_code")
-  yearLabel      String    @map("year_label")
-  price          String?
-  fuel           String?
-  referenceMonth String?   @map("reference_month")
-  fuelAcronym    String?   @map("fuel_acronym")
-  fetchedAt      DateTime? @map("fetched_at")
-  priceUpdatedAt DateTime? @map("price_updated_at")
-  vehicle        Vehicle   @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  id              Int             @id @default(autoincrement())
+  vehicleId       Int             @map("vehicle_id")
+  yearCode        String          @map("year_code")
+  yearLabel       String          @map("year_label")
+  price           String?
+  fuel            String?
+  referenceMonth  String?         @map("reference_month")
+  fuelAcronym     String?         @map("fuel_acronym")
+  fetchedAt       DateTime?       @map("fetched_at")
+  priceUpdatedAt  DateTime?       @map("price_updated_at")
+  vehicle         Vehicle         @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  technicalSpecs  TechnicalSpecs?
 
   @@map("vehicle_years")
 }
 
-model ScrapingDetail {
-  id                 Int      @id @default(autoincrement())
-  vehicleId          Int      @map("vehicle_id")
-  sourceUrl          String   @map("source_url")
-  engine             String?
-  powerHp            String?  @map("power_hp")
-  torque             String?
-  transmission       String?
-  fuelType           String?  @map("fuel_type")
-  consumptionCity    String?  @map("consumption_city")
-  consumptionHighway String?  @map("consumption_highway")
-  rawData            String?  @map("raw_data")
-  scrapedAt          DateTime @default(now()) @map("scraped_at")
-  vehicle            Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+model TechnicalSpecs {
+  id                 Int         @id @default(autoincrement())
+  vehicleYearId      Int         @unique @map("vehicle_year_id")
+  sourceUrl          String      @map("source_url")
+  scrapedAt          DateTime    @default(now()) @map("scraped_at")
+  rawData            String?     @map("raw_data")
 
-  @@map("scraping_details")
+  // General
+  year               String?
+  fuel               String?
+  configuration      String?
+  warranty           String?
+  generation         String?
+  seats              String?
+  platform           String?
+  doors              String?
+  size               String?
+  origin             String?
+  propulsion         String?
+  series             String?
+
+  // Performance
+  acceleration0To100 String?   @map("acceleration_0_100")
+  topSpeedG          String?   @map("top_speed_g")
+  topSpeedE          String?   @map("top_speed_e")
+  weightPowerRatio   String?   @map("weight_power_ratio")
+  weightTorqueRatio  String?   @map("weight_torque_ratio")
+  specificPower      String?   @map("specific_power")
+  specificTorque     String?   @map("specific_torque")
+
+  // Engine
+  engineCode         String?   @map("engine_code")
+  unitDisplacement   String?   @map("unit_displacement")
+  displacement       String?
+  bore               String?
+  stroke             String?
+  cylinders          String?
+  cylindersArrangement String? @map("cylinders_arrangement")
+  valvesPerCylinder  String?   @map("valves_per_cylinder")
+  valveControl       String?   @map("valve_control")
+  valveVariation     String?   @map("valve_variation")
+  tappets            String?
+  aspiration         String?
+  feeding            String?
+  installation       String?
+  arrangement        String?
+  compressionRatio   String?   @map("compression_ratio")
+  driveActuation     String?   @map("drive_actuation")
+  powerHpG           String?   @map("power_hp_g")
+  powerHpE           String?   @map("power_hp_e")
+  maxPowerRpm        String?   @map("max_power_rpm")
+  torqueG            String?   @map("torque_g")
+  torqueE            String?   @map("torque_e")
+  maxTorqueRpm       String?   @map("max_torque_rpm")
+
+  // Transmission
+  coupling           String?
+  gearbox            String?
+  gearboxCode        String?   @map("gearbox_code")
+  gears              String?
+  traction           String?
+
+  // Dimensions
+  height             String?
+  width              String?
+  length             String?
+  wheelbase          String?
+  frontTrack         String?   @map("front_track")
+  rearTrack          String?   @map("rear_track")
+  weight             String?
+  payload            String?
+  trunkCapacity      String?   @map("trunk_capacity")
+  fuelTank           String?   @map("fuel_tank")
+
+  // Brakes
+  frontBrakes        String?   @map("front_brakes")
+  rearBrakes         String?   @map("rear_brakes")
+  sidewallHeight     String?   @map("sidewall_height")
+
+  // Aerodynamics
+  frontalArea        String?   @map("frontal_area")
+  correctedFrontalArea String? @map("corrected_frontal_area")
+  dragCoefficient    String?   @map("drag_coefficient")
+
+  // Steering
+  steeringAssist     String?   @map("steering_assist")
+  turningDiameter    String?   @map("turning_diameter")
+
+  // Suspension
+  frontSuspension    String?   @map("front_suspension")
+  rearSuspension     String?   @map("rear_suspension")
+  elasticElement     String?   @map("elastic_element")
+
+  // Consumption & Autonomy
+  cityConsumptionG   String?   @map("city_consumption_g")
+  highwayConsumptionG String?  @map("highway_consumption_g")
+  cityRangeG         String?   @map("city_range_g")
+  highwayRangeG      String?   @map("highway_range_g")
+  cityConsumptionE   String?   @map("city_consumption_e")
+  highwayConsumptionE String?  @map("highway_consumption_e")
+  cityRangeE         String?   @map("city_range_e")
+  highwayRangeE      String?   @map("highway_range_e")
+
+  vehicleYear        VehicleYear @relation(fields: [vehicleYearId], references: [id], onDelete: Cascade)
+
+  @@map("technical_specs")
 }
 
 model Job {
-  id        Int      @id @default(autoincrement())
-  type      String
-  payload   String
-  status    String   @default("pending")
-  attempts  Int      @default(0)
-  error     String?
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id              Int      @id @default(autoincrement())
+  jobId           String   @unique @map("job_id")
+  type            String
+  payload         String
+  status          String   @default("pending")
+  idempotencyKey  String   @unique @map("idempotency_key")
+  attempts        Int      @default(0)
+  error           String?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
   @@map("jobs")
 }
