@@ -1,4 +1,4 @@
-### ADR-001 · SQLite over PostgreSQL
+### ADR-001 · SQLite over PostgreSQL (deprecated)
  
 **Decision:** use SQLite with better-sqlite3 as the local database.
  
@@ -12,7 +12,7 @@
  
 **Decision:** organize code by feature (vertical slice), not by technical layer.
  
-**Reason:** each feature — search, favorite, scrape, update prices — is largely independent. Grouping all related code (route + service + repository + types) in the same folder makes it easier to understand, modify, and hand off to an AI coding agent without requiring cross-folder context.
+**Reason:** each feature (search, favorite, scrape, update prices) is largely independent. Grouping all related code (route + service + repository + types) in the same folder makes it easier to understand, modify, and hand off to an AI coding agent without requiring cross-folder context.
  
 **Consequences:** some duplication is acceptable within slices. Shared utilities go into `/shared/` only when genuinely used by two or more slices.
  
@@ -28,7 +28,7 @@
  
 ---
  
-### ADR-004 · SQLite job table over Redis/BullMQ (Phase 2 default)
+### ADR-004 · SQLite job table over Redis/BullMQ (deprecated)
  
 **Decision:** implement the job queue using the existing SQLite database before considering BullMQ + Redis.
  
@@ -38,7 +38,7 @@
 
 ---
 
-### ADR-005 · BullMQ for async scraping jobs
+### ADR-005 · BullMQ for async scraping jobs (supersedes ADR-004)
 
 **Disclaimer** I've said before the application will not use some queue tools for now, because I wanted less complexity as possible in this application, but I think the correct implementation of queues will make the scraping flow work better and it will directly impact positively the rest of the entire application (also i want to overengineering XD)
 
@@ -59,3 +59,14 @@ Scraping the vehicle's details involves:
 
 **Idempotency notes**
 - Idempotency key: `sha256(vehicleYearId + url)`. A job is considered a duplicate if an existing job with the same key has status `pending`, `processing`, `retrying`, or `done` — i.e., **any completed or active job blocks re-enqueuing for the same vehicle-year + URL pair.** Once a vehicle-year/URL combination has been scraped successfully (status `done`), the system intentionally prevents re-scraping that exact combination. If updated specs are needed, the frontend should surface the existing data rather than re-scraping.
+
+
+---
+
+### ADR-006 · PostgreSQL migration (supersedes ADR-001)
+
+**Decision:** replace SQLite with PostgreSQL using Prisma 7 as the ORM. Runtime uses `@prisma/adapter-pg`; tests use PGlite (in-process WASM PostgreSQL) via `prisma-pglite`.
+
+**Reason:** the application now uses BullMQ + Redis for async job processing (ADR-005), which runs in a separate worker process — SQLite's single-writer limitation becomes a real constraint. PostgreSQL provides proper concurrent access, native JSONB and enums, and aligns with production deployment patterns. PGlite keeps tests self-contained and fast — no external PostgreSQL server needed in CI.
+
+**Consequences:** single `provider = "postgresql"` schema. All Prisma imports go through the generated output path (`src/generated/prisma/client`). `better-sqlite3` and `@prisma/adapter-better-sqlite3` are removed. Runtime requires `DATABASE_URL` pointing to a PostgreSQL instance. 
