@@ -1,11 +1,11 @@
-import { api } from './api'
+import { api, API_V1 } from './api'
 import type { Brand, BrandModelPriceResponse, CascadingYear, Model, SearchResponse, VehicleType, YearDetailResponse } from './types'
 
 export async function searchByFipeCode(
   vehicleType: VehicleType,
   fipeCode: string,
 ): Promise<SearchResponse> {
-  const response = await api.get(`/api/vehicle/${vehicleType}/${fipeCode}`)
+  const response = await api.get(`${API_V1}/vehicles/${vehicleType}/${fipeCode}`)
   return response.data.data
 }
 
@@ -15,7 +15,7 @@ export async function getYearDetail(
   yearCode: string,
 ): Promise<YearDetailResponse> {
   const response = await api.get(
-    `/api/vehicle/${vehicleType}/${fipeCode}/years/${yearCode}`,
+    `${API_V1}/vehicles/${vehicleType}/${fipeCode}/years/${yearCode}`,
   )
   return response.data.data
 }
@@ -23,7 +23,7 @@ export async function getYearDetail(
 export async function getBrands(
   vehicleType: VehicleType,
 ): Promise<Brand[]> {
-  const response = await api.get(`/api/vehicle/${vehicleType}/brands`)
+  const response = await api.get(`${API_V1}/vehicles/${vehicleType}/brands`)
   return response.data.data
 }
 
@@ -31,7 +31,7 @@ export async function getModels(
   vehicleType: VehicleType,
   brandCode: string,
 ): Promise<Model[]> {
-  const response = await api.get(`/api/vehicle/${vehicleType}/brands/${brandCode}/models`)
+  const response = await api.get(`${API_V1}/vehicles/${vehicleType}/brands/${brandCode}/models`)
   return response.data.data
 }
 
@@ -41,7 +41,7 @@ export async function getYearsByBrandModel(
   modelCode: number,
 ): Promise<CascadingYear[]> {
   const response = await api.get(
-    `/api/vehicle/${vehicleType}/brands/${brandCode}/models/${modelCode}/years`,
+    `${API_V1}/vehicles/${vehicleType}/brands/${brandCode}/models/${modelCode}/years`,
   )
   return response.data.data
 }
@@ -53,7 +53,7 @@ export async function getPriceByBrandModel(
   yearCode: string,
 ): Promise<BrandModelPriceResponse> {
   const response = await api.get(
-    `/api/vehicle/${vehicleType}/brands/${brandCode}/models/${modelCode}/years/${yearCode}`,
+    `${API_V1}/vehicles/${vehicleType}/brands/${brandCode}/models/${modelCode}/years/${yearCode}`,
   )
   return response.data.data
 }

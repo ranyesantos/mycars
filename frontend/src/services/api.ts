@@ -5,3 +5,5 @@ export const api = axios.create({
   timeout: 10000,
   headers: { 'Content-Type': 'application/json' },
 })
+
+export const API_V1 = '/api/v1'

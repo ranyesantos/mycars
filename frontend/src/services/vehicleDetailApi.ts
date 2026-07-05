@@ -1,4 +1,4 @@
-import { api } from './api'
+import { api, API_V1 } from './api'
 import type { VehicleType } from './types'
 
 /** Matches the backend's SpecsRow, keeping snake_case from the JSON response. */
@@ -105,6 +105,6 @@ export async function getVehicleSpecs(
   fipeCode: string,
   yearCode: string,
 ): Promise<VehicleSpecsResponse> {
-  const response = await api.get(`/api/vehicles/${fipeCode}/${yearCode}/specs`)
+  const response = await api.get(`${API_V1}/vehicles/${fipeCode}/${yearCode}/specs`)
   return response.data.data
 }
