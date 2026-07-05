@@ -179,7 +179,7 @@ describe('Vehicle Search Routes', () => {
     const service = new VehicleSearchService(fipeClient, repo)
     app = express()
     app.use(express.json())
-    app.use(createVehicleSearchRoutes(service))
+    app.use('/api/v1/vehicles', createVehicleSearchRoutes(service))
     app.use(errorHandler)
     await clearTestDb(db)
   })
@@ -188,13 +188,13 @@ describe('Vehicle Search Routes', () => {
     await closeTestDb(db)
   })
 
-  describe('GET /api/vehicle/:type/:fipeCode', () => {
+  describe('GET /api/v1/vehicles/:type/:fipeCode', () => {
     it('should return 200 with years from API on first search', async () => {
       fipeClient.fetchYears = vi.fn().mockResolvedValue([
         { code: '2012-1', name: '2012 Gasolina' },
       ])
 
-      const response = await request(app).get('/api/vehicle/cars/005490-9')
+      const response = await request(app).get('/api/v1/vehicles/cars/005490-9')
 
       expect(response.status).toBe(200)
       expect(response.body.success).toBe(true)
@@ -205,7 +205,7 @@ describe('Vehicle Search Routes', () => {
       const vehicleId = await repo.createVehicle('005490-9', 'cars')
       await repo.createYears(vehicleId, [{ code: '2012-1', name: '2012 Gasolina' }])
 
-      const response = await request(app).get('/api/vehicle/cars/005490-9')
+      const response = await request(app).get('/api/v1/vehicles/cars/005490-9')
 
       expect(response.status).toBe(200)
       expect(fipeClient.fetchYears).not.toHaveBeenCalled()
@@ -214,7 +214,7 @@ describe('Vehicle Search Routes', () => {
     it('should return 404 when FIPE code not found', async () => {
       fipeClient.fetchYears = vi.fn().mockResolvedValue([])
 
-      const response = await request(app).get('/api/vehicle/cars/000000-0')
+      const response = await request(app).get('/api/v1/vehicles/cars/000000-0')
 
       expect(response.status).toBe(404)
       expect(response.body.success).toBe(false)
@@ -222,7 +222,7 @@ describe('Vehicle Search Routes', () => {
     })
 
     it('should return 400 when vehicle type is invalid', async () => {
-      const response = await request(app).get('/api/vehicle/boats/005490-9')
+      const response = await request(app).get('/api/v1/vehicles/boats/005490-9')
 
       expect(response.status).toBe(400)
       expect(response.body.success).toBe(false)
@@ -230,7 +230,7 @@ describe('Vehicle Search Routes', () => {
     })
 
     it('should return 400 when FIPE code format is invalid', async () => {
-      const response = await request(app).get('/api/vehicle/cars/abc')
+      const response = await request(app).get('/api/v1/vehicles/cars/abc')
 
       expect(response.status).toBe(400)
       expect(response.body.success).toBe(false)
@@ -238,7 +238,7 @@ describe('Vehicle Search Routes', () => {
     })
   })
 
-  describe('GET /api/vehicle/:type/:fipeCode/years/:yearCode', () => {
+  describe('GET /api/v1/vehicles/:type/:fipeCode/years/:yearCode', () => {
     it('should return 200 with year detail from API', async () => {
       const vehicleId = await repo.createVehicle('005490-9', 'cars')
       await repo.createYears(vehicleId, [{ code: '2023-5', name: '2023 Flex' }])
@@ -255,7 +255,7 @@ describe('Vehicle Search Routes', () => {
       })
 
       const response = await request(app).get(
-        '/api/vehicle/cars/005490-9/years/2023-5',
+        '/api/v1/vehicles/cars/005490-9/years/2023-5',
       )
 
       expect(response.status).toBe(200)
@@ -274,7 +274,7 @@ describe('Vehicle Search Routes', () => {
       })
 
       const response = await request(app).get(
-        '/api/vehicle/cars/005490-9/years/2023-5',
+        '/api/v1/vehicles/cars/005490-9/years/2023-5',
       )
 
       expect(response.status).toBe(200)
@@ -283,7 +283,7 @@ describe('Vehicle Search Routes', () => {
 
     it('should return 404 when vehicle does not exist', async () => {
       const response = await request(app).get(
-        '/api/vehicle/cars/005490-9/years/2023-5',
+        '/api/v1/vehicles/cars/005490-9/years/2023-5',
       )
 
       expect(response.status).toBe(404)
@@ -292,7 +292,7 @@ describe('Vehicle Search Routes', () => {
 
     it('should return 400 when year code format is invalid', async () => {
       const response = await request(app).get(
-        '/api/vehicle/cars/005490-9/years/invalid',
+        '/api/v1/vehicles/cars/005490-9/years/invalid',
       )
 
       expect(response.status).toBe(400)
@@ -301,14 +301,14 @@ describe('Vehicle Search Routes', () => {
     })
   })
 
-  describe('GET /api/vehicle/:type/brands', () => {
+  describe('GET /api/v1/vehicles/:type/brands', () => {
     it('should return 200 with brands list', async () => {
       fipeClient.fetchBrands = vi.fn().mockResolvedValue([
         { code: '59', name: 'VW - VolksWagen' },
         { code: '1', name: 'Fiat' },
       ])
 
-      const response = await request(app).get('/api/vehicle/cars/brands')
+      const response = await request(app).get('/api/v1/vehicles/cars/brands')
 
       expect(response.status).toBe(200)
       expect(response.body.success).toBe(true)
@@ -317,32 +317,32 @@ describe('Vehicle Search Routes', () => {
     })
 
     it('should return 400 when vehicle type is invalid', async () => {
-      const response = await request(app).get('/api/vehicle/boats/brands')
+      const response = await request(app).get('/api/v1/vehicles/boats/brands')
       expect(response.status).toBe(400)
       expect(response.body.success).toBe(false)
       expect(response.body.error.code).toBe('VALIDATION_ERROR')
     })
   })
 
-  describe('GET /api/vehicle/:type/brands/:brandCode/models', () => {
+  describe('GET /api/v1/vehicles/:type/brands/:brandCode/models', () => {
     it('should return 200 with models list', async () => {
       fipeClient.fetchModels = vi.fn().mockResolvedValue([
         { code: 5940, name: 'Gol 1.0 Flex 12V 5p' },
       ])
-      const response = await request(app).get('/api/vehicle/cars/brands/59/models')
+      const response = await request(app).get('/api/v1/vehicles/cars/brands/59/models')
       expect(response.status).toBe(200)
       expect(response.body.success).toBe(true)
       expect(response.body.data).toHaveLength(1)
     })
   })
 
-  describe('GET /api/vehicle/:type/brands/:brandCode/models/:modelCode/years', () => {
+  describe('GET /api/v1/vehicles/:type/brands/:brandCode/models/:modelCode/years', () => {
     it('should return 200 with years list', async () => {
       fipeClient.fetchYearsByBrandModel = vi.fn().mockResolvedValue([
         { code: '2012-1', name: '2012 Gasolina' },
       ])
       const response = await request(app).get(
-        '/api/vehicle/cars/brands/59/models/5940/years',
+        '/api/v1/vehicles/cars/brands/59/models/5940/years',
       )
       expect(response.status).toBe(200)
       expect(response.body.success).toBe(true)
@@ -350,7 +350,7 @@ describe('Vehicle Search Routes', () => {
     })
   })
 
-  describe('GET /api/vehicle/:type/brands/:brandCode/models/:modelCode/years/:yearCode', () => {
+  describe('GET /api/v1/vehicles/:type/brands/:brandCode/models/:modelCode/years/:yearCode', () => {
     it('should return 200 with price detail and create vehicle in DB', async () => {
       fipeClient.fetchPriceByBrandModel = vi.fn().mockResolvedValue({
         vehicleType: 1,
@@ -365,7 +365,7 @@ describe('Vehicle Search Routes', () => {
       })
 
       const response = await request(app).get(
-        '/api/vehicle/cars/brands/59/models/5940/years/2012-1',
+        '/api/v1/vehicles/cars/brands/59/models/5940/years/2012-1',
       )
 
       expect(response.status).toBe(200)
@@ -377,7 +377,7 @@ describe('Vehicle Search Routes', () => {
     it('should return 404 when year not available', async () => {
       fipeClient.fetchPriceByBrandModel = vi.fn().mockResolvedValue(null)
       const response = await request(app).get(
-        '/api/vehicle/cars/brands/59/models/5940/years/9999-9',
+        '/api/v1/vehicles/cars/brands/59/models/5940/years/9999-9',
       )
       expect(response.status).toBe(404)
       expect(response.body.success).toBe(false)

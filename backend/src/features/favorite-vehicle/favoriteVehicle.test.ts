@@ -23,7 +23,7 @@ describe('Favorite Vehicle Routes', () => {
     vehicleSearchRepo = new VehicleSearchRepository(db)
     app = express()
     app.use(express.json())
-    app.use(createFavoriteVehicleRoutes(repo))
+    app.use('/api/v1/favorites', createFavoriteVehicleRoutes(repo))
     app.use(errorHandler)
     await clearTestDb(db)
   })
@@ -32,13 +32,13 @@ describe('Favorite Vehicle Routes', () => {
     await closeTestDb(db)
   })
 
-  describe('POST /api/favorites/:type/:fipeCode', () => {
+  describe('POST /api/v1/favorites/:type/:fipeCode', () => {
     it('should favorite a vehicle when vehicle exists', async () => {
       await vehicleSearchRepo.createVehicleWithYears('900001-1', 'cars', [
         { code: '2012-1', name: '2012 Gasolina' },
       ])
 
-      const response = await request(app).post('/api/favorites/cars/900001-1')
+      const response = await request(app).post('/api/v1/favorites/cars/900001-1')
 
       expect(response.status).toBe(200)
       expect(response.body.success).toBe(true)
@@ -47,7 +47,7 @@ describe('Favorite Vehicle Routes', () => {
     })
 
     it('should return 404 when vehicle does not exist', async () => {
-      const response = await request(app).post('/api/favorites/cars/900001-1')
+      const response = await request(app).post('/api/v1/favorites/cars/900001-1')
 
       expect(response.status).toBe(404)
       expect(response.body.success).toBe(false)
@@ -55,7 +55,7 @@ describe('Favorite Vehicle Routes', () => {
     })
 
     it('should return 400 when vehicle type is invalid', async () => {
-      const response = await request(app).post('/api/favorites/boats/900001-1')
+      const response = await request(app).post('/api/v1/favorites/boats/900001-1')
 
       expect(response.status).toBe(400)
       expect(response.body.success).toBe(false)
@@ -63,7 +63,7 @@ describe('Favorite Vehicle Routes', () => {
     })
 
     it('should return 400 when FIPE code format is invalid', async () => {
-      const response = await request(app).post('/api/favorites/cars/abc')
+      const response = await request(app).post('/api/v1/favorites/cars/abc')
 
       expect(response.status).toBe(400)
       expect(response.body.success).toBe(false)
@@ -71,17 +71,17 @@ describe('Favorite Vehicle Routes', () => {
     })
   })
 
-  describe('DELETE /api/favorites/:type/:fipeCode', () => {
+  describe('DELETE /api/v1/favorites/:type/:fipeCode', () => {
     it('should unfavorite a vehicle', async () => {
       await vehicleSearchRepo.createVehicleWithYears('900001-1', 'cars', [
         { code: '2012-1', name: '2012 Gasolina' },
       ])
 
       // First, favorite it
-      await request(app).post('/api/favorites/cars/900001-1')
+      await request(app).post('/api/v1/favorites/cars/900001-1')
 
       // Then unfavorite
-      const response = await request(app).delete('/api/favorites/cars/900001-1')
+      const response = await request(app).delete('/api/v1/favorites/cars/900001-1')
 
       expect(response.status).toBe(200)
       expect(response.body.success).toBe(true)
@@ -89,7 +89,7 @@ describe('Favorite Vehicle Routes', () => {
     })
 
     it('should return 404 when vehicle does not exist', async () => {
-      const response = await request(app).delete('/api/favorites/cars/900001-1')
+      const response = await request(app).delete('/api/v1/favorites/cars/900001-1')
 
       expect(response.status).toBe(404)
       expect(response.body.success).toBe(false)
@@ -97,7 +97,7 @@ describe('Favorite Vehicle Routes', () => {
     })
   })
 
-  describe('GET /api/favorites', () => {
+  describe('GET /api/v1/favorites', () => {
     it('should list only favorited vehicles', async () => {
       await vehicleSearchRepo.createVehicleWithYears('900001-1', 'cars', [
         { code: '2012-1', name: '2012 Gasolina' },
@@ -107,9 +107,9 @@ describe('Favorite Vehicle Routes', () => {
       ])
 
       // Favorite only one
-      await request(app).post('/api/favorites/cars/900001-1')
+      await request(app).post('/api/v1/favorites/cars/900001-1')
 
-      const response = await request(app).get('/api/favorites')
+      const response = await request(app).get('/api/v1/favorites')
 
       expect(response.status).toBe(200)
       expect(response.body.success).toBe(true)
@@ -118,7 +118,7 @@ describe('Favorite Vehicle Routes', () => {
     })
 
     it('should return empty array when no favorites', async () => {
-      const response = await request(app).get('/api/favorites')
+      const response = await request(app).get('/api/v1/favorites')
 
       expect(response.status).toBe(200)
       expect(response.body.success).toBe(true)

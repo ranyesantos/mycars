@@ -20,7 +20,7 @@ describe('Vehicle Detail Routes', () => {
     repo = new VehicleDetailRepository(db)
     app = express()
     app.use(express.json())
-    app.use(createVehicleDetailRoutes(repo))
+    app.use('/api/v1/vehicles', createVehicleDetailRoutes(repo))
     app.use(errorHandler)
     await clearTestDb(db)
   })
@@ -87,11 +87,11 @@ describe('Vehicle Detail Routes', () => {
     return { fipeCode: vehicle.fipeCode, yearCode: '2020-1' }
   }
 
-  describe('GET /api/vehicles/:fipeCode/:yearCode/specs', () => {
+  describe('GET /api/v1/vehicles/:fipeCode/:yearCode/specs', () => {
     it('should return 200 with specs when vehicle and specs exist', async () => {
       const { fipeCode, yearCode } = await seedVehicleWithYearAndSpecs()
 
-      const response = await request(app).get(`/api/vehicles/${fipeCode}/${yearCode}/specs`)
+      const response = await request(app).get(`/api/v1/vehicles/${fipeCode}/${yearCode}/specs`)
 
       expect(response.status).toBe(200)
       expect(response.body.success).toBe(true)
@@ -105,7 +105,7 @@ describe('Vehicle Detail Routes', () => {
     it('should return 200 with specs: null when vehicle exists but has no specs', async () => {
       const { fipeCode, yearCode } = await seedVehicleWithYearNoSpecs()
 
-      const response = await request(app).get(`/api/vehicles/${fipeCode}/${yearCode}/specs`)
+      const response = await request(app).get(`/api/v1/vehicles/${fipeCode}/${yearCode}/specs`)
 
       expect(response.status).toBe(200)
       expect(response.body.success).toBe(true)
@@ -113,7 +113,7 @@ describe('Vehicle Detail Routes', () => {
     })
 
     it('should return 404 when fipeCode does not exist', async () => {
-      const response = await request(app).get('/api/vehicles/999999-9/2020-1/specs')
+      const response = await request(app).get('/api/v1/vehicles/999999-9/2020-1/specs')
 
       expect(response.status).toBe(404)
       expect(response.body.success).toBe(false)
@@ -123,7 +123,7 @@ describe('Vehicle Detail Routes', () => {
     it('should return 404 when yearCode does not match', async () => {
       const { fipeCode } = await seedVehicleWithYearNoSpecs()
 
-      const response = await request(app).get(`/api/vehicles/${fipeCode}/2099-1/specs`)
+      const response = await request(app).get(`/api/v1/vehicles/${fipeCode}/2099-1/specs`)
 
       // Vehicle exists but year doesn't — vehicle.years.where filters out,
       // so vehicle.years[0] is undefined → returns null from repository

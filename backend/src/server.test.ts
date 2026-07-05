@@ -4,7 +4,7 @@ import type { PrismaClient } from './generated/prisma/client'
 import { createApp } from './server'
 import { createTestDb, closeTestDb } from './db/test-helpers'
 
-describe('GET /api/health', () => {
+describe('GET /api/health (unversioned)', () => {
   let db: PrismaClient
   let app: ReturnType<typeof createApp>
 

@@ -34,7 +34,7 @@ describe('Scrape Details Routes', () => {
     const service = new ScrapeDetailsService(repo, mockQueue)
     app = express()
     app.use(express.json())
-    app.use(createScrapeDetailsRoutes(service))
+    app.use('/api/v1/scraping', createScrapeDetailsRoutes(service))
     app.use(errorHandler)
     await clearTestDb(db)
   })
@@ -64,12 +64,12 @@ describe('Scrape Details Routes', () => {
     return { vehicleId: vehicle.id, yearCode: year2012.yearCode }
   }
 
-  describe('POST /api/scraping', () => {
+  describe('POST /api/v1/scraping', () => {
     it('should return 202 with jobId when request is valid', async () => {
       const { vehicleId, yearCode } = await seedVehicle()
 
       const response = await request(app)
-        .post('/api/scraping')
+        .post('/api/v1/scraping')
         .send({
           vehicleId,
           yearCode,
@@ -79,7 +79,7 @@ describe('Scrape Details Routes', () => {
       expect(response.status).toBe(202)
       expect(response.body.success).toBe(true)
       expect(response.body.data.jobId).toBeDefined()
-      expect(response.body.data.pollUrl).toContain('/api/scraping/')
+      expect(response.body.data.pollUrl).toContain('/api/v1/scraping/')
       expect(mockQueue.add).toHaveBeenCalledTimes(1)
     })
 
@@ -87,7 +87,7 @@ describe('Scrape Details Routes', () => {
       const { vehicleId, yearCode } = await seedVehicle()
 
       const first = await request(app)
-        .post('/api/scraping')
+        .post('/api/v1/scraping')
         .send({
           vehicleId,
           yearCode,
@@ -95,7 +95,7 @@ describe('Scrape Details Routes', () => {
         })
 
       const second = await request(app)
-        .post('/api/scraping')
+        .post('/api/v1/scraping')
         .send({
           vehicleId,
           yearCode,
@@ -110,7 +110,7 @@ describe('Scrape Details Routes', () => {
 
     it('should return 404 when vehicleId does not exist', async () => {
       const response = await request(app)
-        .post('/api/scraping')
+        .post('/api/v1/scraping')
         .send({
           vehicleId: 9999,
           yearCode: '2012-1',
@@ -126,7 +126,7 @@ describe('Scrape Details Routes', () => {
       const { vehicleId } = await seedVehicle()
 
       const response = await request(app)
-        .post('/api/scraping')
+        .post('/api/v1/scraping')
         .send({
           vehicleId,
           yearCode: '9999-9',
@@ -142,7 +142,7 @@ describe('Scrape Details Routes', () => {
       const { vehicleId, yearCode } = await seedVehicle()
 
       const response = await request(app)
-        .post('/api/scraping')
+        .post('/api/v1/scraping')
         .send({
           vehicleId,
           yearCode,
@@ -156,7 +156,7 @@ describe('Scrape Details Routes', () => {
 
     it('should return 400 when vehicleId is not a positive integer', async () => {
       const response = await request(app)
-        .post('/api/scraping')
+        .post('/api/v1/scraping')
         .send({
           vehicleId: -1,
           yearCode: '2012-1',
@@ -172,7 +172,7 @@ describe('Scrape Details Routes', () => {
       const { vehicleId } = await seedVehicle()
 
       const response = await request(app)
-        .post('/api/scraping')
+        .post('/api/v1/scraping')
         .send({
           vehicleId,
           yearCode: 'invalid',
@@ -185,12 +185,12 @@ describe('Scrape Details Routes', () => {
     })
   })
 
-  describe('GET /api/scraping/:jobId/status', () => {
+  describe('GET /api/v1/scraping/:jobId/status', () => {
     it('should return current job status', async () => {
       const { vehicleId, yearCode } = await seedVehicle()
 
       const enqueueRes = await request(app)
-        .post('/api/scraping')
+        .post('/api/v1/scraping')
         .send({
           vehicleId,
           yearCode,
@@ -199,7 +199,7 @@ describe('Scrape Details Routes', () => {
 
       const jobId = enqueueRes.body.data.jobId as string
 
-      const statusRes = await request(app).get(`/api/scraping/${jobId}/status`)
+      const statusRes = await request(app).get(`/api/v1/scraping/${jobId}/status`)
 
       expect(statusRes.status).toBe(200)
       expect(statusRes.body.success).toBe(true)
@@ -209,7 +209,7 @@ describe('Scrape Details Routes', () => {
     })
 
     it('should return 404 when jobId does not exist', async () => {
-      const response = await request(app).get('/api/scraping/nonexistent-id/status')
+      const response = await request(app).get('/api/v1/scraping/nonexistent-id/status')
 
       expect(response.status).toBe(404)
       expect(response.body.success).toBe(false)
