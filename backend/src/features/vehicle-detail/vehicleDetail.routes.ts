@@ -208,9 +208,9 @@ export function createVehicleDetailRoutes(
 ): Router {
   const router = Router()
 
-  // GET /api/vehicles/:fipeCode/:yearCode/specs
+  // GET /api/v1/vehicles/:fipeCode/:yearCode/specs
   router.get(
-    '/api/vehicles/:fipeCode/:yearCode/specs',
+    '/:fipeCode/:yearCode/specs',
     asyncHandler(async (req, res) => {
       const fipeCode = req.params.fipeCode as string
       const yearCode = req.params.yearCode as string

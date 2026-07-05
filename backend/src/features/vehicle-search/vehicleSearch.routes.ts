@@ -15,9 +15,9 @@ export function createVehicleSearchRoutes(
 ): Router {
   const router = Router()
 
-  // GET /api/vehicle/:type/brands
+  // GET /api/v1/vehicles/:type/brands
   router.get(
-    '/api/vehicle/:type/brands',
+    '/:type/brands',
     validateBrandsParams,
     asyncHandler(async (req, res) => {
       const { type } = req.params as Record<string, string>
@@ -26,9 +26,9 @@ export function createVehicleSearchRoutes(
     }),
   )
 
-  // GET /api/vehicle/:type/brands/:brandCode/models
+  // GET /api/v1/vehicles/:type/brands/:brandCode/models
   router.get(
-    '/api/vehicle/:type/brands/:brandCode/models',
+    '/:type/brands/:brandCode/models',
     validateModelsParams,
     asyncHandler(async (req, res) => {
       const { type, brandCode } = req.params as Record<string, string>
@@ -37,9 +37,9 @@ export function createVehicleSearchRoutes(
     }),
   )
 
-  // GET /api/vehicle/:type/brands/:brandCode/models/:modelCode/years
+  // GET /api/v1/vehicles/:type/brands/:brandCode/models/:modelCode/years
   router.get(
-    '/api/vehicle/:type/brands/:brandCode/models/:modelCode/years',
+    '/:type/brands/:brandCode/models/:modelCode/years',
     validateYearsByModelParams,
     asyncHandler(async (req, res) => {
       const { type, brandCode, modelCode } = req.params as Record<string, string>
@@ -48,9 +48,9 @@ export function createVehicleSearchRoutes(
     }),
   )
 
-  // GET /api/vehicle/:type/brands/:brandCode/models/:modelCode/years/:yearCode
+  // GET /api/v1/vehicles/:type/brands/:brandCode/models/:modelCode/years/:yearCode
   router.get(
-    '/api/vehicle/:type/brands/:brandCode/models/:modelCode/years/:yearCode',
+    '/:type/brands/:brandCode/models/:modelCode/years/:yearCode',
     validatePriceByModelParams,
     asyncHandler(async (req, res) => {
       const { type, brandCode, modelCode, yearCode } = req.params as Record<string, string>
@@ -60,7 +60,7 @@ export function createVehicleSearchRoutes(
   )
 
   router.get(
-    '/api/vehicle/:type/:fipeCode',
+    '/:type/:fipeCode',
     validateVehicleSearchParams,
     asyncHandler(async (req, res) => {
       const { type, fipeCode } = req.params as Record<string, string>
@@ -74,7 +74,7 @@ export function createVehicleSearchRoutes(
   )
 
   router.get(
-    '/api/vehicle/:type/:fipeCode/years/:yearCode',
+    '/:type/:fipeCode/years/:yearCode',
     validateYearDetailParams,
     asyncHandler(async (req, res) => {
       const { type, fipeCode, yearCode } = req.params as Record<string, string>

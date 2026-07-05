@@ -28,9 +28,9 @@ export function createFavoriteVehicleRoutes(
 ): Router {
   const router = Router()
 
-  // POST /api/favorites/:type/:fipeCode — favorite a vehicle
+  // POST /api/v1/favorites/:type/:fipeCode — favorite a vehicle
   router.post(
-    '/api/favorites/:type/:fipeCode',
+    '/:type/:fipeCode',
     validateFavoriteParams,
     asyncHandler(async (req, res) => {
       const fipeCode: string = req.params.fipeCode as string
@@ -54,9 +54,9 @@ export function createFavoriteVehicleRoutes(
     }),
   )
 
-  // DELETE /api/favorites/:type/:fipeCode — unfavorite a vehicle
+  // DELETE /api/v1/favorites/:type/:fipeCode — unfavorite a vehicle
   router.delete(
-    '/api/favorites/:type/:fipeCode',
+    '/:type/:fipeCode',
     validateFavoriteParams,
     asyncHandler(async (req, res) => {
       const fipeCode: string = req.params.fipeCode as string
@@ -85,9 +85,9 @@ export function createFavoriteVehicleRoutes(
     }),
   )
 
-  // GET /api/favorites — list all favorited vehicles
+  // GET /api/v1/favorites — list all favorited vehicles
   router.get(
-    '/api/favorites',
+    '/',
     asyncHandler(async (_req, res) => {
       const favorites = await repository.listFavorites()
 

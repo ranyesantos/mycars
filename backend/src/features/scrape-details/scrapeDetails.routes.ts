@@ -8,9 +8,9 @@ export function createScrapeDetailsRoutes(
 ): Router {
   const router = Router()
 
-  // POST /api/scraping — enqueue a scraping job
+  // POST /api/v1/scraping — enqueue a scraping job
   router.post(
-    '/api/scraping',
+    '/',
     validateEnqueueScraping,
     asyncHandler(async (req, res) => {
       const { vehicleId, yearCode, url } = req.body as {
@@ -36,15 +36,15 @@ export function createScrapeDetailsRoutes(
         success: true,
         data: {
           jobId: result.jobId,
-          pollUrl: `/api/scraping/${result.jobId}/status`,
+          pollUrl: `/api/v1/scraping/${result.jobId}/status`,
         },
       })
     }),
   )
 
-  // GET /api/scraping/:jobId/status — get job status
+  // GET /api/v1/scraping/:jobId/status — get job status
   router.get(
-    '/api/scraping/:jobId/status',
+    '/:jobId/status',
     asyncHandler(async (req, res) => {
       const { jobId } = req.params as { jobId: string }
       const result = await service.getJobStatus(jobId)
