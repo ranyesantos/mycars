@@ -17,6 +17,7 @@ import { getScrapingQueue } from './shared/queue/scrapingQueue'
 import { VehicleDetailRepository } from './features/vehicle-detail/index'
 import { createVehicleDetailRoutes } from './features/vehicle-detail/index'
 import { getDb } from './db/index'
+import { createApiRoutes } from './routes'
 
 export function createApp(db: PrismaClient): express.Express {
   const app = express()
@@ -38,10 +39,14 @@ export function createApp(db: PrismaClient): express.Express {
   app.get('/api/health', (_req, res) => {
     res.json({ success: true, data: { status: 'ok' } })
   })
-  app.use(createVehicleSearchRoutes(vehicleSearchService))
-  app.use(createFavoriteVehicleRoutes(favoriteVehicleRepo))
-  app.use(createScrapeDetailsRoutes(scrapeDetailsService))
-  app.use(createVehicleDetailRoutes(vehicleDetailRepo))
+  const routes = createApiRoutes({
+    vehicleSearch: createVehicleSearchRoutes(vehicleSearchService),
+    favorites: createFavoriteVehicleRoutes(favoriteVehicleRepo),
+    scrapeDetails: createScrapeDetailsRoutes(scrapeDetailsService),
+    vehicleDetail: createVehicleDetailRoutes(vehicleDetailRepo),
+  })
+
+  app.use('/api/v1', routes)
 
   // Error handler must be last
   app.use(errorHandler)
