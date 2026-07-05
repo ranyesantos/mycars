@@ -1,4 +1,4 @@
-/** Request body for POST /api/scraping */
+/** Request body for POST /api/v1/scraping */
 export interface EnqueueScrapingInput {
   vehicleId: number
   yearCode: string
@@ -11,7 +11,7 @@ export interface ScrapingJobPayload {
   url: string
 }
 
-/** Response from GET /api/scraping/:jobId/status */
+/** Response from GET /api/v1/scraping/:jobId/status */
 export interface JobStatusResponse {
   jobId: string
   status: string

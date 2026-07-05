@@ -122,7 +122,7 @@ worker.on('failed', async (job, error) => {
 
 // --- Recovery sweeper ---
 // Picks up jobs that were inserted into SQLite but never reached Redis
-// (e.g., Redis was down when POST /api/scraping was called).
+// (e.g., Redis was down when POST /api/v1/scraping was called).
 // Runs every 30 seconds. Enqueues stale pending rows and marks failed
 // rows that are too old to recover.
 const SWEEP_INTERVAL_MS = 30_000

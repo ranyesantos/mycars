@@ -56,8 +56,7 @@ export function createApp(db: PrismaClient): express.Express {
 
 // Production bootstrap — only runs outside test mode
 // In tests, server.test.ts calls createApp(db) with a PGlite-backed client
-console.log(process.env.NODE_ENV)
-if (process.env.NODE_ENV !== 'test') {
+if (process.env.NODE_ENV !== 'test' && process.env.NODE_ENV !== 'testing') {
   const app = createApp(getDb())
   app.listen(3001, () => {
     logger.info('Server running on http://localhost:3001')
